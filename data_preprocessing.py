@@ -32,9 +32,10 @@ for col in merged_train_df.columns.values:
         str).str.match(r'^(-?\d+)(\.\d+)?$').sum()
     na_counts = merged_train_df[col].isna().sum()
 
-    if num_counts / (train_data_counts - na_counts) > 0.8:
+    if num_counts / (train_data_counts - na_counts) > 0.9:
         numerical_feature.append(col)
-
+print('numerical feature count: %s' %len(numerical_feature))
+# 混合型数据处理
 for df in combine:
     df[numerical_feature[5:]] = df[numerical_feature[5:]].apply(
         lambda x: pd.to_numeric(x, downcast='float', errors='coerce'))
