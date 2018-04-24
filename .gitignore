@@ -4,3 +4,5 @@ data_keep_50000.csv
 meinian_round1_data_part1_20180408.txt
 meinian_round1_data_part2_20180408.txt
 data_test.csv
+test.ipynb
+.vscode/launch.json
