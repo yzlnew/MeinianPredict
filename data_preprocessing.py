@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import re
+
 import numpy as np
 import pandas as pd
 
@@ -23,26 +25,74 @@ merged_train_df = pd.merge(train_df, data, on='vid', sort=False)
 merged_test_df = pd.merge(test_df, data, on='vid', sort=False)
 combine = [merged_train_df, merged_test_df]
 
-# 提取数值特征并转化成 float 类型
+# 字母全转小写（注意 NaN ），全角转半角，去掉多余空格
+
+# 提取数值特征
+
+
+def get_num_prop(data_col):
+    num_counts = data_col.astype(
+        str).str.match(r'^(-?\d+)(\.\d+)?$').sum()
+    na_counts = data_col.isna().sum()
+
+    return num_counts / (data_col.shape[0] - na_counts)
+
+
 numerical_feature = []
-train_data_counts = merged_train_df.shape[0]
 
 for col in merged_train_df.columns.values:
-    num_counts = merged_train_df[col].astype(
-        str).str.match(r'^(-?\d+)(\.\d+)?$').sum()
-    na_counts = merged_train_df[col].isna().sum()
-
-    if num_counts / (train_data_counts - na_counts) > 0.9:
+    if get_num_prop(merged_train_df[col]) > 0.5:
         numerical_feature.append(col)
-print('numerical feature count: %s' %len(numerical_feature))
-# 混合型数据处理
-for df in combine:
-    df[numerical_feature[5:]] = df[numerical_feature[5:]].apply(
-        lambda x: pd.to_numeric(x, downcast='float', errors='coerce'))
 
-merged_train_df.loc[21234, '10004'] = np.nan
-merged_train_df.loc[21196, '2403'] = np.nan
-merged_train_df.loc[21196, '2405'] = np.nan
+numerical_feature = numerical_feature[5:]
+print('numerical feature count: %s' % len(numerical_feature))
+print(numerical_feature)
+
+# 打印出所有数值特征中混合数据
+
+
+def search_non_numeric(data):
+    if not re.search(r'^(-?\d+)(\.\d+)?$', data) and data != 'nan':
+        non_numeric.append(data)
+
+
+non_numeric = []
+# applymap 会有问题，第一列会操作两次
+
+for col in numerical_feature:
+    temp = merged_train_df[col].astype('str').apply(search_non_numeric)
+with open('mix_in_numeric.txt', 'w') as f:
+    for t in non_numeric:
+        f.write(t + '\n')
+
+
+# 处理混合数据类型
+def convert_mixed_num(data):
+    try:
+        ret = float(data)
+
+        return ret
+    except:
+        all_match = re.findall(r'\d+\.?\d*', data)  # 注意：不带负号
+
+        if all_match:
+            all_list = [float(i) for i in all_match]
+
+            return sum(all_list) / len(all_list)    # 取均值
+        else:
+            return np.nan
+
+
+for df in combine:
+    df[numerical_feature] = df[numerical_feature].astype(
+        'str').applymap(convert_mixed_num)
+# for df in combine:
+#     df[numerical_feature[5:]] = df[numerical_feature[5:]].apply(
+#         lambda x: pd.to_numeric(x, downcast='float', errors='coerce'))
+
+# merged_train_df.loc[21234, '10004'] = np.nan
+# merged_train_df.loc[21196, '2403'] = np.nan
+# merged_train_df.loc[21196, '2405'] = np.nan
 
 # 导出数据
 merged_train_df.to_csv('data_train.csv')
