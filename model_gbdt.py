@@ -61,6 +61,7 @@ def set_params_space():
         Integer(60, 70, name='num_leaves'),
         Integer(110, 130, name='min_data')
     ]
+    return space
 
 
 def objective(values):
@@ -91,7 +92,7 @@ def objective(values):
             y_eval.iloc[:, i], np.ndarray.round(y_pred, 3)))
         # print('rmse: ')
         # print(sum(rmse) / len(rmse))
-    print('RMSE..... %s .....iter.....' % (sum(rmse) / len(rmse)))
+    print('RMSE..... %s' % (sum(rmse) / len(rmse)))
     gc.collect()
 
     return sum(rmse) / len(rmse)
@@ -130,6 +131,12 @@ def main():
     Y_pred_gbdt_df = Y_pred_df.loc[:, ['vid'] + label]
     Y_pred_gbdt_df.to_csv('gbdt_output_tuned.csv', index=False, header=False)
 
+def cvtest():
+    values = [0.52, 60, 110]
+    objective(values)
+
+
 
 if __name__ == '__main__':
-    main()
+    X, y, X_test, feature, label, test_vid = get_data()
+    cvtest()
