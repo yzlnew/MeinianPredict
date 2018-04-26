@@ -6,9 +6,9 @@ import re
 import numpy as np
 import pandas as pd
 
-data = pd.read_csv('data_keep_50000.csv', low_memory=False)
-train_df = pd.read_csv('meinian_round1_train_20180408.csv')
-test_df = pd.read_csv('meinian_round1_test_a_20180409.csv')
+data = pd.read_csv('../data/data_keep_50000.csv', low_memory=False)
+train_df = pd.read_csv('../data/meinian_round1_train_20180408.csv')
+test_df = pd.read_csv('../data/meinian_round1_test_a_20180409.csv')
 
 # 通过 describe 查看特征的类型，标准差，修正类型和异常数据
 train_df['收缩压'] = pd.to_numeric(train_df['收缩压'], errors='coerce')
@@ -95,5 +95,5 @@ for df in combine:
 # merged_train_df.loc[21196, '2405'] = np.nan
 
 # 导出数据
-merged_train_df.to_csv('data_train.csv')
-merged_test_df.to_csv('data_test.csv')
+merged_train_df.to_csv('../data/data_train.csv')
+merged_test_df.to_csv('../data/data_test.csv')

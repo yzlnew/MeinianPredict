@@ -16,8 +16,8 @@ from sklearn.model_selection import (ShuffleSplit, cross_val_score,
 warnings.filterwarnings("ignore")
 
 # 读取数据
-train_df = pd.read_csv('data_train.csv', low_memory=False, index_col=0)
-test_df = pd.read_csv('data_test.csv', low_memory=False, index_col=0)
+train_df = pd.read_csv('../data/data_train.csv', low_memory=False, index_col=0)
+test_df = pd.read_csv('../data/data_test.csv', low_memory=False, index_col=0)
 
 # 获取数值特征列表，并填充 NaN
 feature = train_df.describe().columns.values.tolist()[5:]

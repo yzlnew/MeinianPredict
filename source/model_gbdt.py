@@ -40,8 +40,8 @@ def lgbm(x, y, params):
 
 def get_data():
     # 读取数据
-    train_df = pd.read_csv('data_train.csv', low_memory=False, index_col=0)
-    test_df = pd.read_csv('data_test.csv', low_memory=False, index_col=0)
+    train_df = pd.read_csv('../data/data_train.csv', low_memory=False, index_col=0)
+    test_df = pd.read_csv('../data/data_test.csv', low_memory=False, index_col=0)
 
     # 获取数值特征列表，并填充 NaN
     feature = train_df.describe().columns.values.tolist()[5:]
@@ -129,7 +129,7 @@ def main():
 
     Y_pred_df['vid'] = test_vid
     Y_pred_gbdt_df = Y_pred_df.loc[:, ['vid'] + label]
-    Y_pred_gbdt_df.to_csv('gbdt_output_tuned.csv', index=False, header=False)
+    Y_pred_gbdt_df.to_csv('../data/gbdt_output_tuned.csv', index=False, header=False)
 
 def cvtest():
     values = [0.52, 60, 110]
