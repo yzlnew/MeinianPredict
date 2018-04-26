@@ -81,10 +81,9 @@ def objective(values):
     print(params)
 
     rmse = []
-
+    X_train, X_eval, y_train, y_eval = train_test_split(
+        X, y, test_size=0.2, random_state=0)
     for i in range(5):
-        X_train, X_eval, y_train, y_eval = train_test_split(
-            X, y, test_size=0.2, random_state=0)
         # X_train, y_train = X, y
         gbm = lgbm(X_train, y_train.iloc[:, i], params)
         y_pred = gbm.predict(X_eval, num_iteration=gbm.best_iteration)
@@ -106,9 +105,7 @@ def find_best_params(space):
     print(res_gp.x)
     # [0.5163199844704593, 60, 110]
 
-
-def main():
-    X, y, X_test, feature, label, test_vid = get_data()
+def get_best_params():
     params = {
         'learning_rate': 0.02,
         'boosting_type': 'gbdt',
@@ -120,23 +117,74 @@ def main():
         'min_hessian': 1,
         'verbose': -1,
     }
+    return params
+
+def main():
+    X, y, X_test, feature, label, test_vid = get_data()
+    params = get_best_params()
     Y_pred_df = pd.DataFrame()
 
-    for i in range(5):
+    for i in range(len(label)):
         gbm = lgbm(X, y.iloc[:, i], params)
         y_pred_test = gbm.predict(X_test, num_iteration=gbm.best_iteration)
         Y_pred_df[label[i]] = y_pred_test
 
     Y_pred_df['vid'] = test_vid
     Y_pred_gbdt_df = Y_pred_df.loc[:, ['vid'] + label]
+    Y_pred_gbdt_df = Y_pred_gbdt_df.round(3)
     Y_pred_gbdt_df.to_csv('../data/gbdt_output_tuned.csv', index=False, header=False)
 
 def cvtest():
     values = [0.52, 60, 110]
     objective(values)
 
+def log1p_test():
+    X, y, X_test, feature, label, test_vid = get_data()
+    params = get_best_params()
+    Y_pred_df = pd.DataFrame()
+    y.iloc[:,1:4] = np.log1p(y.iloc[:,1:4])
 
+    rmse = []
+    X_train, X_eval, y_train, y_eval = train_test_split(
+        X, y, test_size=0.2, random_state=0)
+
+    for i in [0]:
+        gbm = lgbm(X_train, y_train.iloc[:, i], params)
+        y_pred = gbm.predict(X_eval, num_iteration=gbm.best_iteration)
+        y_pred_test = gbm.predict(X_test, num_iteration=gbm.best_iteration)
+        Y_pred_df[label[i]] = y_pred_test
+
+        rmse.append(mean_squared_log_error(
+            y_eval.iloc[:, i], y_pred))
+
+    for i in [1,2,3]:
+        gbm = lgbm(X_train, y_train.iloc[:, i], params)
+        y_pred = gbm.predict(X_eval, num_iteration=gbm.best_iteration)
+        y_pred = np.expm1(y_pred)
+        y_pred_test = gbm.predict(X_test, num_iteration=gbm.best_iteration)
+        Y_pred_df[label[i]] = np.expm1(y_pred_test)
+
+        rmse.append(mean_squared_log_error(
+            np.expm1(y_eval.iloc[:, i]), y_pred))
+
+    for i in [4]:
+        gbm = lgbm(X_train, y_train.iloc[:, i], params)
+        y_pred = gbm.predict(X_eval, num_iteration=gbm.best_iteration)
+        y_pred_test = gbm.predict(X_test, num_iteration=gbm.best_iteration)
+        Y_pred_df[label[i]] = y_pred_test
+
+        rmse.append(mean_squared_log_error(
+            y_eval.iloc[:, i], y_pred))
+
+    print(rmse)
+    print('RMSE..... %s' % (sum(rmse) / len(rmse)))
+    Y_pred_df['vid'] = test_vid
+    Y_pred_gbdt_df = Y_pred_df.loc[:, ['vid'] + label]
+    Y_pred_gbdt_df = Y_pred_gbdt_df.round(3)
+    Y_pred_gbdt_df.to_csv('../data/gbdt_output_log1p_123.csv', index=False, header=False)
 
 if __name__ == '__main__':
-    X, y, X_test, feature, label, test_vid = get_data()
-    cvtest()
+    # X, y, X_test, feature, label, test_vid = get_data()
+    # cvtest()
+    # main()
+    log1p_test()
