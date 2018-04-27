@@ -20,7 +20,7 @@ from skopt.utils import use_named_args
 warnings.filterwarnings("ignore")
 
 
-def lgbm(x, y, params):
+def lgbm(x, y, params, num_boost_round=1000):
     """generate gbdt
 
     :x: train feature
@@ -32,7 +32,7 @@ def lgbm(x, y, params):
     lgb_train = lgb.Dataset(x, y)
     print('Start training...')
     start = time.time()
-    gbm = lgb.train(params, lgb_train, num_boost_round=1000)
+    gbm = lgb.train(params, lgb_train, num_boost_round=num_boost_round)
     print('Finished. %s s used' % round(time.time() - start, 2))
 
     return gbm
@@ -64,7 +64,7 @@ def set_params_space():
     return space
 
 
-def objective(values):
+def universal_objective(values):
     # GBDT 参数
     params = {
         'learning_rate': 0.02,
@@ -97,13 +97,14 @@ def objective(values):
     return sum(rmse) / len(rmse)
 
 
-def find_best_params(space):
-    res_gp = gp_minimize(objective, space, n_calls=20,
+def find_best_universal_params(space):
+    res_gp = gp_minimize(universal_objective, space, n_calls=20,
                          random_state=0)
 
     print('Best score=%.4f' % res_gp.fun)
     print(res_gp.x)
     # [0.5163199844704593, 60, 110]
+
 
 def get_best_params():
     params = {
@@ -111,7 +112,7 @@ def get_best_params():
         'boosting_type': 'gbdt',
         'objective': 'rmse',
         'metric': 'rmse',
-        'sub_feature': 0.52,
+        'sub_feature': 0.5,
         'num_leaves': 60,
         'min_data': 110,
         'min_hessian': 1,
@@ -121,79 +122,106 @@ def get_best_params():
     }
     return params
 
-def main():
+
+def universal_model():
     X, y, X_test, feature, label, test_vid = get_data()
     params = get_best_params()
-    Y_pred_df = pd.DataFrame()
+    y_pred_df = pd.DataFrame()
     print('Total Feature: %s' %(len(feature)))
     for i in range(len(label)):
         gbm = lgbm(X, y.iloc[:, i], params)
         y_pred_test = gbm.predict(X_test, num_iteration=gbm.best_iteration)
-        Y_pred_df[label[i]] = y_pred_test
+        y_pred_df[label[i]] = y_pred_test
 
-    Y_pred_df['vid'] = test_vid
-    Y_pred_gbdt_df = Y_pred_df.loc[:, ['vid'] + label]
+    y_pred_df['vid'] = test_vid
+    Y_pred_gbdt_df = y_pred_df.loc[:, ['vid'] + label]
     Y_pred_gbdt_df = Y_pred_gbdt_df.round(3)
     Y_pred_gbdt_df.to_csv('../data/gbdt_output_tuned.csv', index=False, header=False)
 
-def cvtest():
+
+def universal_cvtest():
     values = [0.52, 60, 110]
     objective(values)
 
-def log1p_test():
+
+def ensemble_model():
     X, y, X_test, feature, label, test_vid = get_data()
+
     params = get_best_params()
-    Y_pred_df = pd.DataFrame()
-    y.iloc[:,1:5] = np.log1p(y.iloc[:,1:5])
+    y_pred_df = pd.DataFrame()
+    
     print('Total Feature: %s' %(len(feature)))
 
-    rmse = []
-    X_train, X_eval, y_train, y_eval = train_test_split(
-        X, y, test_size=0.2, random_state=80)
+    has_eval = True
+    if has_eval:
+        X_train, X_eval, y_train, y_eval = train_test_split(
+            X, y, test_size=0.2, random_state=80)
+    else:
+        X_train, y_train = X, y
+
     gbm_store = []
-    for i in [0]:
-        gbm = lgbm(X_train, y_train.iloc[:, i], params)
-        gbm_store.append(gbm)
-        y_pred = gbm.predict(X_eval, num_iteration=gbm.best_iteration)
-        y_pred_test = gbm.predict(X_test, num_iteration=gbm.best_iteration)
-        Y_pred_df[label[i]] = y_pred_test
+    rmse = [0]*5
+    def eval_rmse(gbm, X_eval, y_eval, original=True):
+        y_pred_eval = gbm.predict(X_eval, num_iteration=gbm.best_iteration)
+        if original:
+            return mean_squared_log_error(y_eval, y_pred_eval)
+        else:
+            return mean_squared_log_error(y_eval, np.expm1(y_pred_eval))
 
-        rmse.append(mean_squared_log_error(
-            y_eval.iloc[:, i], y_pred))
+    is_original = [1,1,0,0,0]
+    #model_0
+    y_train_0 = y_train.iloc[:, 0]
+    gbm_0 = lgbm(X_train, y_train_0, params)
+    if has_eval:
+        y_eval_0 = y_eval.iloc[:, 0]
+        rmse[0] = eval_rmse(gbm_0, X_eval, y_eval_0, is_original[0])
+    
+    #model_1
+    y_train_1 = y_train.iloc[:, 1]
+    gbm_1 = lgbm(X_train, y_train_1, params)
+    if has_eval:
+        y_eval_1 = y_eval.iloc[:, 1]
+        rmse[1] = eval_rmse(gbm_1, X_eval, y_eval_1, is_original[1])
 
-    for i in [1,2,3,4]:
-        gbm = lgbm(X_train, y_train.iloc[:, i], params)
-        gbm_store.append(gbm)
-        y_pred = gbm.predict(X_eval, num_iteration=gbm.best_iteration)
-        y_pred = np.expm1(y_pred)
-        y_pred_test = gbm.predict(X_test, num_iteration=gbm.best_iteration)
-        Y_pred_df[label[i]] = np.expm1(y_pred_test)
+    #model_2
+    y_train_2 = np.log1p(y_train.iloc[:, 2])
+    gbm_2 = lgbm(X_train, y_train_2, params)
+    if has_eval:
+        y_eval_2 = y_eval.iloc[:, 2]
+        rmse[2] = eval_rmse(gbm_2, X_eval, y_eval_2, is_original[2])
 
-        rmse.append(mean_squared_log_error(
-            np.expm1(y_eval.iloc[:, i]), y_pred))
+    #model_3
+    y_train_3 = np.log1p(y_train.iloc[:, 3])
+    gbm_3 = lgbm(X_train, y_train_3, params)
+    if has_eval:
+        y_eval_3 = y_eval.iloc[:, 3]
+        rmse[3] = eval_rmse(gbm_3, X_eval, y_eval_3, is_original[3])    
 
-    # for i in [4]:
-    #     gbm = lgbm(X_train, y_train.iloc[:, i], params)
-    #     y_pred = gbm.predict(X_eval, num_iteration=gbm.best_iteration)
-    #     y_pred_test = gbm.predict(X_test, num_iteration=gbm.best_iteration)
-    #     Y_pred_df[label[i]] = y_pred_test
-
-    #     rmse.append(mean_squared_log_error(
-    #         y_eval.iloc[:, i], y_pred))
+    #model_4
+    y_train_4 = np.log1p(y_train.iloc[:, 4])
+    gbm_4 = lgbm(X_train, y_train_4, params)
+    if has_eval:
+        y_eval_4 = y_eval.iloc[:, 4]
+        rmse[4] = eval_rmse(gbm_4, X_eval, y_eval_4, is_original[4])
 
     print(rmse)
     score = (sum(rmse) / len(rmse))
     print('RMSE..... %s' % score)
     score = round(score, 6)
+
+    gbm_store = [gbm_0, gbm_1, gbm_2, gbm_3, gbm_4]
     for i, gbm in enumerate(gbm_store):
+        y_pred_test = gbm.predict(X_test, num_iteration=gbm.best_iteration)
+        y_pred_df[label[i]] = y_pred_test if is_original else np.expm1(y_pred_test)
         gbm.save_model('../model/gbdt_model'+str(i)+'_'+str(score)+'.txt')
-    Y_pred_df['vid'] = test_vid
-    Y_pred_gbdt_df = Y_pred_df.loc[:, ['vid'] + label]
-    # Y_pred_gbdt_df = Y_pred_gbdt_df.round(3)
-    Y_pred_gbdt_df.to_csv('../data/gbdt/gbdt_output_log1p_'+str(score)+'.csv', index=False, header=False)
+        
+    y_pred_df['vid'] = test_vid
+    y_pred_gbdt_df = y_pred_df.loc[:, ['vid'] + label]
+    # y_pred_gbdt_df = y_pred_gbdt_df.round(3)
+    y_pred_gbdt_df.to_csv('../data/gbdt/gbdt_output_log1p_'+str(score)+'.csv', index=False, header=False)
 
 if __name__ == '__main__':
     # X, y, X_test, feature, label, test_vid = get_data()
     # cvtest()
     # main()
-    log1p_test()
+    ensemble_model()
