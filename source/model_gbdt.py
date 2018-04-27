@@ -40,8 +40,8 @@ def lgbm(x, y, params):
 
 def get_data():
     # 读取数据
-    train_df = pd.read_csv('../data/data_train.csv', low_memory=False, index_col=0)
-    test_df = pd.read_csv('../data/data_test.csv', low_memory=False, index_col=0)
+    train_df = pd.read_pickle('../data/data_train.pkl')
+    test_df = pd.read_pickle('../data/data_test.pkl')
 
     # 获取数值特征列表，并填充 NaN
     feature = train_df.describe().columns.values.tolist()[5:]
@@ -116,6 +116,8 @@ def get_best_params():
         'min_data': 110,
         'min_hessian': 1,
         'verbose': -1,
+        'bagging_fraction': 0.85,
+        'bagging_freq': 50
     }
     return params
 
@@ -123,7 +125,7 @@ def main():
     X, y, X_test, feature, label, test_vid = get_data()
     params = get_best_params()
     Y_pred_df = pd.DataFrame()
-
+    print('Total Feature: %s' %(len(feature)))
     for i in range(len(label)):
         gbm = lgbm(X, y.iloc[:, i], params)
         y_pred_test = gbm.predict(X_test, num_iteration=gbm.best_iteration)
@@ -142,14 +144,16 @@ def log1p_test():
     X, y, X_test, feature, label, test_vid = get_data()
     params = get_best_params()
     Y_pred_df = pd.DataFrame()
-    y.iloc[:,1:4] = np.log1p(y.iloc[:,1:4])
+    y.iloc[:,1:5] = np.log1p(y.iloc[:,1:5])
+    print('Total Feature: %s' %(len(feature)))
 
     rmse = []
     X_train, X_eval, y_train, y_eval = train_test_split(
-        X, y, test_size=0.2, random_state=0)
-
+        X, y, test_size=0.2, random_state=80)
+    gbm_store = []
     for i in [0]:
         gbm = lgbm(X_train, y_train.iloc[:, i], params)
+        gbm_store.append(gbm)
         y_pred = gbm.predict(X_eval, num_iteration=gbm.best_iteration)
         y_pred_test = gbm.predict(X_test, num_iteration=gbm.best_iteration)
         Y_pred_df[label[i]] = y_pred_test
@@ -157,8 +161,9 @@ def log1p_test():
         rmse.append(mean_squared_log_error(
             y_eval.iloc[:, i], y_pred))
 
-    for i in [1,2,3]:
+    for i in [1,2,3,4]:
         gbm = lgbm(X_train, y_train.iloc[:, i], params)
+        gbm_store.append(gbm)
         y_pred = gbm.predict(X_eval, num_iteration=gbm.best_iteration)
         y_pred = np.expm1(y_pred)
         y_pred_test = gbm.predict(X_test, num_iteration=gbm.best_iteration)
@@ -167,21 +172,25 @@ def log1p_test():
         rmse.append(mean_squared_log_error(
             np.expm1(y_eval.iloc[:, i]), y_pred))
 
-    for i in [4]:
-        gbm = lgbm(X_train, y_train.iloc[:, i], params)
-        y_pred = gbm.predict(X_eval, num_iteration=gbm.best_iteration)
-        y_pred_test = gbm.predict(X_test, num_iteration=gbm.best_iteration)
-        Y_pred_df[label[i]] = y_pred_test
+    # for i in [4]:
+    #     gbm = lgbm(X_train, y_train.iloc[:, i], params)
+    #     y_pred = gbm.predict(X_eval, num_iteration=gbm.best_iteration)
+    #     y_pred_test = gbm.predict(X_test, num_iteration=gbm.best_iteration)
+    #     Y_pred_df[label[i]] = y_pred_test
 
-        rmse.append(mean_squared_log_error(
-            y_eval.iloc[:, i], y_pred))
+    #     rmse.append(mean_squared_log_error(
+    #         y_eval.iloc[:, i], y_pred))
 
     print(rmse)
-    print('RMSE..... %s' % (sum(rmse) / len(rmse)))
+    score = (sum(rmse) / len(rmse))
+    print('RMSE..... %s' % score)
+    score = round(score, 6)
+    for i, gbm in enumerate(gbm_store):
+        gbm.save_model('../model/gbdt_model'+str(i)+'_'+str(score)+'.txt')
     Y_pred_df['vid'] = test_vid
     Y_pred_gbdt_df = Y_pred_df.loc[:, ['vid'] + label]
-    Y_pred_gbdt_df = Y_pred_gbdt_df.round(3)
-    Y_pred_gbdt_df.to_csv('../data/gbdt_output_log1p_123.csv', index=False, header=False)
+    # Y_pred_gbdt_df = Y_pred_gbdt_df.round(3)
+    Y_pred_gbdt_df.to_csv('../data/gbdt/gbdt_output_log1p_'+str(score)+'.csv', index=False, header=False)
 
 if __name__ == '__main__':
     # X, y, X_test, feature, label, test_vid = get_data()
