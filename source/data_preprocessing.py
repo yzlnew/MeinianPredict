@@ -2,11 +2,15 @@
 # -*- coding: utf-8 -*-
 
 import re
-
+import warnings
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import time
+from sklearn import preprocessing
+
+warnings.filterwarnings("ignore")
 
 data = pd.read_csv('../data/data_keep_50000.csv', low_memory=False)
 train_df = pd.read_csv('../data/meinian_round1_train_20180408.csv')
@@ -21,6 +25,7 @@ train_df['血清甘油三酯'] = pd.to_numeric(train_df['血清甘油三酯'], e
 train_df.loc[22357, '舒张压'] = np.nan
 train_df.loc[29394, '舒张压'] = np.nan
 train_df.loc[29394, '收缩压'] = np.nan
+train_df['血清低密度脂蛋白'][train_df['血清低密度脂蛋白']<0] = 0
 
 # 合并数据
 merged_train_df = pd.merge(train_df, data, on='vid', sort=False)
@@ -45,29 +50,28 @@ for col in merged_train_df.columns.values:
 
 numerical_feature = numerical_feature[5:]
 print('numerical feature count: %s' % len(numerical_feature))
-print(numerical_feature)
+start = time.time()
+print('dealing numerical features...')
+# print(numerical_feature)
 
-# 打印出所有数值特征中混合数据
+# # 打印出所有数值特征中混合数据
+# def search_non_numeric(data):
+#     if not re.search(r'^(-?\d+)(\.\d+)?$', data) and data != 'nan':
+#         non_numeric.append(data)
 
+# non_numeric = []
+# # applymap 会有问题，第一列会操作两次
 
-def search_non_numeric(data):
-    if not re.search(r'^(-?\d+)(\.\d+)?$', data) and data != 'nan':
-        non_numeric.append(data)
+# for col in numerical_feature:
+#     non_numeric.append('----' + col + '----')
+#     temp = merged_train_df[col].astype('str').apply(search_non_numeric)
 
-
-non_numeric = []
-# applymap 会有问题，第一列会操作两次
-
-for col in numerical_feature:
-    non_numeric.append('----' + col + '----')
-    temp = merged_train_df[col].astype('str').apply(search_non_numeric)
-
-for col in numerical_feature:
-    non_numeric.append('----' + col + '----')
-    temp = merged_test_df[col].astype('str').apply(search_non_numeric)
-with open('mix_in_numeric.txt', 'w') as f:
-    for t in non_numeric:
-        f.write(t + '\n')
+# for col in numerical_feature:
+#     non_numeric.append('----' + col + '----')
+#     temp = merged_test_df[col].astype('str').apply(search_non_numeric)
+# with open('mix_in_numeric.txt', 'w') as f:
+#     for t in non_numeric:
+#         f.write(t + '\n')
 
 
 # 处理混合数据类型
@@ -76,8 +80,7 @@ def convert_mixed_num(data):
     special_cases = ['未见', '阴性']
     try:
         ret = float(data)
-
-        return ret
+        return ret if data >=0 else np.nan    # 保证没有负数
     except:
         if data in special_cases:
             return 0
@@ -108,22 +111,37 @@ merged_train_df.loc[3163, '193'] = np.nan
 merged_train_df.loc[6055, '2333'] = 5.0    # 多了小数点
 merged_train_df.loc[5085, '269013']    # 未见，映射成0
 merged_train_df.loc[[8551, 8840, 9072, 9309], '3193'] = '>=1.030'
-
 merged_test_df.loc[2327, '3193'] = '>=1.030'
 merged_test_df.loc[2327, '1840'] = '<=5.0'
 
+merged_train_df.loc[21196,'2405'] = np.nan    # 异常大
+merged_train_df.loc[33729,'0424'] = np.nan    # 异常小
+
+# RF 得到的特征重要性
+low_importance = ['269024', '979013', '979018', '1325', '979014', '1326']
 
 for df in combine:
     df[numerical_feature] = df[numerical_feature].astype(
-        'str').applymap(convert_mixed_num)
+    'str').applymap(convert_mixed_num)
+    df[numerical_feature] = np.log1p(df[numerical_feature])
+    # to_fill = df[numerical_feature].median()
+    # df[numerical_feature] = preprocessing.robust_scale(df[numerical_feature].fillna(to_fill))
+    df.drop(columns=low_importance, inplace=True)    # 去掉不重要的特征
+
+need_log1p = ['100007', '1117', '1127', '1814', '1815', '183']
+for col in need_log1p:
+    for df in combine:
+        df[col] = np.log1p(df[col])
 # for df in combine:
 #     df[numerical_feature[5:]] = df[numerical_feature[5:]].apply(
 #         lambda x: pd.to_numeric(x, downcast='float', errors='coerce'))
+print('done!time used: %s s' %(time.time()-start))
 
+numerical_feature = [i for i in numerical_feature if i not in low_importance]
 
 # 导出数据
-merged_train_df.to_csv('../data/data_train.csv')
-merged_test_df.to_csv('../data/data_test.csv')
+merged_train_df.to_pickle('../data/data_train.pkl')
+merged_test_df.to_pickle('../data/data_test.pkl')
 
-sns.heatmap(merged_train_df[numerical_feature].corr())
-plt.show()
+# sns.heatmap(merged_train_df[label+numerical_feature].corr())
+# plt.show()
