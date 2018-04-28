@@ -6,3 +6,6 @@ meinian_round1_data_part2_20180408.txt
 data_test.csv
 test.ipynb
 .vscode/launch.json
+model/
+source/.vscode/
+data/
