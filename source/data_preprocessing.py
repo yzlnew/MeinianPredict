@@ -123,7 +123,6 @@ low_importance = ['269024', '979013', '979018', '1325', '979014', '1326']
 for df in combine:
     df[numerical_feature] = df[numerical_feature].astype(
     'str').applymap(convert_mixed_num)
-    df[numerical_feature] = np.log1p(df[numerical_feature])
     # to_fill = df[numerical_feature].median()
     # df[numerical_feature] = preprocessing.robust_scale(df[numerical_feature].fillna(to_fill))
     df.drop(columns=low_importance, inplace=True)    # 去掉不重要的特征
