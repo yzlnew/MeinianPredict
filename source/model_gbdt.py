@@ -152,7 +152,7 @@ def ensemble_model():
     
     print('Total Feature: %s' %(len(feature)))
 
-    has_eval = True
+    has_eval = False
     if has_eval:
         X_train, X_eval, y_train, y_eval = train_test_split(
             X, y, test_size=0.2, random_state=80)
@@ -208,17 +208,17 @@ def ensemble_model():
     score = (sum(rmse) / len(rmse))
     print('RMSE..... %s' % score)
     score = round(score, 6)
-
+    time_stamp = time.strftime("%Y-%m-%d_%H%M_", time.localtime()) 
     gbm_store = [gbm_0, gbm_1, gbm_2, gbm_3, gbm_4]
     for i, gbm in enumerate(gbm_store):
         y_pred_test = gbm.predict(X_test, num_iteration=gbm.best_iteration)
         y_pred_df[label[i]] = y_pred_test if is_original else np.expm1(y_pred_test)
-        gbm.save_model('../model/gbdt_model'+str(i)+'_'+str(score)+'.txt')
+        gbm.save_model('../model/gbdt_model'+time_stamp+str(i)+'_'+str(score)+'.txt')
         
     y_pred_df['vid'] = test_vid
     y_pred_gbdt_df = y_pred_df.loc[:, ['vid'] + label]
     # y_pred_gbdt_df = y_pred_gbdt_df.round(3)
-    y_pred_gbdt_df.to_csv('../data/gbdt/gbdt_output_log1p_'+str(score)+'.csv', index=False, header=False)
+    y_pred_gbdt_df.to_csv('../data/gbdt/gbdt_output_log1p_'+time_stamp+str(score)+'.csv', index=False, header=False)
 
 if __name__ == '__main__':
     # X, y, X_test, feature, label, test_vid = get_data()
