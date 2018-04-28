@@ -20,7 +20,7 @@ from skopt.utils import use_named_args
 warnings.filterwarnings("ignore")
 
 
-def lgbm(x, y, params, num_boost_round=1000):
+def lgbm(x, y, params, has_eval, num_boost_round=1000):
     """generate gbdt
 
     :x: train feature
@@ -34,7 +34,8 @@ def lgbm(x, y, params, num_boost_round=1000):
     start = time.time()
     gbm = lgb.train(params, lgb_train, num_boost_round=num_boost_round)
     print('Finished. %s s used' % round(time.time() - start, 2))
-
+    if not has_eval:
+        lgb.cv(params, lgb_train, stratified=False, num_boost_round=1000, verbose_eval=100)
     return gbm
 
 
@@ -46,7 +47,7 @@ def get_data():
     # 获取数值特征列表，并填充 NaN
     feature = train_df.describe().columns.values.tolist()[5:]
     label = train_df.describe().columns.values.tolist()[0:5]
-    to_fill = train_df.median()
+    to_fill = train_df[feature+label].mean()
     X = train_df.loc[:, feature].fillna(to_fill)
     y = train_df.loc[:, label].fillna(to_fill)
     X_test = test_df.loc[:, feature].fillna(to_fill)
@@ -110,7 +111,7 @@ def get_best_params():
     params = {
         'learning_rate': 0.02,
         'boosting_type': 'gbdt',
-        'objective': 'rmse',
+        'objective': 'regression_l2',
         'metric': 'rmse',
         'sub_feature': 0.5,
         'num_leaves': 60,
@@ -152,10 +153,10 @@ def ensemble_model():
     
     print('Total Feature: %s' %(len(feature)))
 
-    has_eval = False
+    has_eval = 1    # 是否有验证集，无则需要 CV 验证
     if has_eval:
         X_train, X_eval, y_train, y_eval = train_test_split(
-            X, y, test_size=0.2, random_state=80)
+            X, y, test_size=0.2, random_state=2020)
     else:
         X_train, y_train = X, y
 
@@ -168,38 +169,39 @@ def ensemble_model():
         else:
             return mean_squared_log_error(y_eval, np.expm1(y_pred_eval))
 
-    is_original = [1,1,0,0,0]
+    is_original = [1,1,0,0,0]    # 是否是原始数据，否则进行 log1p 处理
+    if_cv = 0
     #model_0
     y_train_0 = y_train.iloc[:, 0]
-    gbm_0 = lgbm(X_train, y_train_0, params)
+    gbm_0 = lgbm(X_train, y_train_0, params, has_eval)
     if has_eval:
         y_eval_0 = y_eval.iloc[:, 0]
         rmse[0] = eval_rmse(gbm_0, X_eval, y_eval_0, is_original[0])
     
     #model_1
     y_train_1 = y_train.iloc[:, 1]
-    gbm_1 = lgbm(X_train, y_train_1, params)
+    gbm_1 = lgbm(X_train, y_train_1, params, has_eval)
     if has_eval:
         y_eval_1 = y_eval.iloc[:, 1]
         rmse[1] = eval_rmse(gbm_1, X_eval, y_eval_1, is_original[1])
 
     #model_2
     y_train_2 = np.log1p(y_train.iloc[:, 2])
-    gbm_2 = lgbm(X_train, y_train_2, params)
+    gbm_2 = lgbm(X_train, y_train_2, params, has_eval)
     if has_eval:
         y_eval_2 = y_eval.iloc[:, 2]
         rmse[2] = eval_rmse(gbm_2, X_eval, y_eval_2, is_original[2])
 
     #model_3
     y_train_3 = np.log1p(y_train.iloc[:, 3])
-    gbm_3 = lgbm(X_train, y_train_3, params)
+    gbm_3 = lgbm(X_train, y_train_3, params, has_eval)
     if has_eval:
         y_eval_3 = y_eval.iloc[:, 3]
         rmse[3] = eval_rmse(gbm_3, X_eval, y_eval_3, is_original[3])    
 
     #model_4
     y_train_4 = np.log1p(y_train.iloc[:, 4])
-    gbm_4 = lgbm(X_train, y_train_4, params)
+    gbm_4 = lgbm(X_train, y_train_4, params, has_eval)
     if has_eval:
         y_eval_4 = y_eval.iloc[:, 4]
         rmse[4] = eval_rmse(gbm_4, X_eval, y_eval_4, is_original[4])
@@ -212,7 +214,7 @@ def ensemble_model():
     gbm_store = [gbm_0, gbm_1, gbm_2, gbm_3, gbm_4]
     for i, gbm in enumerate(gbm_store):
         y_pred_test = gbm.predict(X_test, num_iteration=gbm.best_iteration)
-        y_pred_df[label[i]] = y_pred_test if is_original else np.expm1(y_pred_test)
+        y_pred_df[label[i]] = y_pred_test if is_original[i] else np.expm1(y_pred_test)
         gbm.save_model('../model/gbdt_model'+time_stamp+str(i)+'_'+str(score)+'.txt')
         
     y_pred_df['vid'] = test_vid
