@@ -156,12 +156,11 @@ def ensemble_model():
     has_eval = 1    # 是否有验证集，无则需要 CV 验证
     if has_eval:
         X_train, X_eval, y_train, y_eval = train_test_split(
-            X, y, test_size=0.2, random_state=2020)
+            X, y, test_size=0.2, random_state=3)
     else:
         X_train, y_train = X, y
 
-    gbm_store = []
-    rmse = [0]*5
+
     def eval_rmse(gbm, X_eval, y_eval, original=True):
         y_pred_eval = gbm.predict(X_eval, num_iteration=gbm.best_iteration)
         if original:
@@ -169,49 +168,25 @@ def ensemble_model():
         else:
             return mean_squared_log_error(y_eval, np.expm1(y_pred_eval))
 
-    is_original = [1,1,0,0,0]    # 是否是原始数据，否则进行 log1p 处理
-    if_cv = 0
-    #model_0
-    y_train_0 = y_train.iloc[:, 0]
-    gbm_0 = lgbm(X_train, y_train_0, params, has_eval)
-    if has_eval:
-        y_eval_0 = y_eval.iloc[:, 0]
-        rmse[0] = eval_rmse(gbm_0, X_eval, y_eval_0, is_original[0])
-    
-    #model_1
-    y_train_1 = y_train.iloc[:, 1]
-    gbm_1 = lgbm(X_train, y_train_1, params, has_eval)
-    if has_eval:
-        y_eval_1 = y_eval.iloc[:, 1]
-        rmse[1] = eval_rmse(gbm_1, X_eval, y_eval_1, is_original[1])
-
-    #model_2
-    y_train_2 = np.log1p(y_train.iloc[:, 2])
-    gbm_2 = lgbm(X_train, y_train_2, params, has_eval)
-    if has_eval:
-        y_eval_2 = y_eval.iloc[:, 2]
-        rmse[2] = eval_rmse(gbm_2, X_eval, y_eval_2, is_original[2])
-
-    #model_3
-    y_train_3 = np.log1p(y_train.iloc[:, 3])
-    gbm_3 = lgbm(X_train, y_train_3, params, has_eval)
-    if has_eval:
-        y_eval_3 = y_eval.iloc[:, 3]
-        rmse[3] = eval_rmse(gbm_3, X_eval, y_eval_3, is_original[3])    
-
-    #model_4
-    y_train_4 = np.log1p(y_train.iloc[:, 4])
-    gbm_4 = lgbm(X_train, y_train_4, params, has_eval)
-    if has_eval:
-        y_eval_4 = y_eval.iloc[:, 4]
-        rmse[4] = eval_rmse(gbm_4, X_eval, y_eval_4, is_original[4])
+    is_original = [0,0,0,0,0]    # 是否是原始数据，否则进行 log1p 处理
+    gbm_store = [0]*5
+    rmse = [0]*5
+    if_cv = 0    # 是否需要 CV
+    params_store = [params]*5
+    for i, params in enumerate(params_store):
+        y_train_model = y_train.iloc[:, i] if is_original[i] else np.log1p(y_train.iloc[:, i])
+        gbm = lgbm(X_train, y_train_model, params, has_eval)
+        gbm_store[i] = gbm
+        if has_eval:
+            y_eval_model = y_eval.iloc[:, i]
+            rmse[i] = eval_rmse(gbm, X_eval, y_eval_model, is_original[i])
 
     print(rmse)
     score = (sum(rmse) / len(rmse))
     print('RMSE..... %s' % score)
     score = round(score, 6)
     time_stamp = time.strftime("%Y-%m-%d_%H%M_", time.localtime()) 
-    gbm_store = [gbm_0, gbm_1, gbm_2, gbm_3, gbm_4]
+    # gbm_store = [gbm_0, gbm_1, gbm_2, gbm_3, gbm_4]
     for i, gbm in enumerate(gbm_store):
         y_pred_test = gbm.predict(X_test, num_iteration=gbm.best_iteration)
         y_pred_df[label[i]] = y_pred_test if is_original[i] else np.expm1(y_pred_test)
