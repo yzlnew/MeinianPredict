@@ -119,6 +119,7 @@ merged_train_df.loc[33729,'0424'] = np.nan    # 异常小
 
 # RF 得到的特征重要性
 low_importance = ['269024', '979013', '979018', '1325', '979014', '1326']
+print('Drop %s features' %(len(low_importance)))
 
 for df in combine:
     df[numerical_feature] = df[numerical_feature].astype(
