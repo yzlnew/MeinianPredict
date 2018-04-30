@@ -44,16 +44,24 @@ def get_data():
     train_df = pd.read_pickle('../data/data_train.pkl')
     test_df = pd.read_pickle('../data/data_test.pkl')
 
-    # 获取数值特征列表，并填充 NaN
-    feature = train_df.describe().columns.values.tolist()[5:]
+    # 获取特征列表，并填充 NaN
+    num_feature = train_df.describe().columns.values.tolist()[5:]
     label = train_df.describe().columns.values.tolist()[0:5]
-    to_fill = train_df[feature+label].mean()
-    X = train_df.loc[:, feature].fillna(to_fill)
-    y = train_df.loc[:, label].fillna(to_fill)
-    X_test = test_df.loc[:, feature].fillna(to_fill)
-    test_vid = test_df['vid']
+    cate_feature = train_df.describe(include='category').columns.values.tolist()
 
-    return X, y, X_test, feature, label, test_vid
+    most_num = train_df[num_feature+label].mean()
+    most_cate ={}
+    for col in cate_feature:
+        most_cate[col] = train_df[col].value_counts().index[0]
+
+    X = train_df.loc[:, num_feature].fillna(most_num)
+    y = train_df.loc[:, label].fillna(most_num)
+    X_test = test_df.loc[:, num_feature].fillna(most_num)
+    
+    X[cate_feature] = train_df.loc[:, cate_feature]
+    X_test[cate_feature] = test_df.loc[:, cate_feature]
+    test_vid = test_df['vid']
+    return X, y, X_test, num_feature, cate_feature, label, test_vid
 
 
 def set_params_space():
@@ -83,7 +91,7 @@ def universal_objective(values):
 
     rmse = []
     X_train, X_eval, y_train, y_eval = train_test_split(
-        X, y, test_size=0.2, random_state=0)
+        X, y, test_size=0.2, random_state=2018)
     for i in range(5):
         # X_train, y_train = X, y
         gbm = lgbm(X_train, y_train.iloc[:, i], params)
@@ -113,12 +121,12 @@ def get_best_params():
         'boosting_type': 'gbdt',
         'objective': 'regression_l2',
         'metric': 'rmse',
-        'sub_feature': 0.5,
+        'sub_feature': 0.6,
         'num_leaves': 60,
-        'min_data': 110,
+        'min_data': 150,
         'min_hessian': 1,
         'verbose': -1,
-        'bagging_fraction': 0.85,
+        'bagging_fraction': 0.80,
         'bagging_freq': 50
     }
     return params
@@ -145,18 +153,18 @@ def universal_cvtest():
     objective(values)
 
 
-def ensemble_model():
-    X, y, X_test, feature, label, test_vid = get_data()
+def separate_model():
+    X, y, X_test, num_feature, cate_feature, label, test_vid = get_data()
 
     params = get_best_params()
     y_pred_df = pd.DataFrame()
     
-    print('Total Feature: %s' %(len(feature)))
+    print('Total Feature: %s' %((len(X.columns))))
 
     has_eval = 1    # 是否有验证集，无则需要 CV 验证
     if has_eval:
         X_train, X_eval, y_train, y_eval = train_test_split(
-            X, y, test_size=0.2, random_state=3)
+            X, y, test_size=0.2, random_state=2018)
     else:
         X_train, y_train = X, y
 
@@ -201,4 +209,4 @@ if __name__ == '__main__':
     # X, y, X_test, feature, label, test_vid = get_data()
     # cvtest()
     # main()
-    ensemble_model()
+    separate_model()
