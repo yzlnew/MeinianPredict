@@ -20,7 +20,7 @@ from skopt.utils import use_named_args
 warnings.filterwarnings("ignore")
 
 
-def lgbm(x, y, params, has_eval, num_boost_round=1000):
+def lgbm(x, y, params, has_eval, num_boost_round=800):
     """generate gbdt
 
     :x: train feature
@@ -58,8 +58,8 @@ def get_data():
     y = train_df.loc[:, label].fillna(most_num)
     X_test = test_df.loc[:, num_feature].fillna(most_num)
     
-    X[cate_feature] = train_df.loc[:, cate_feature]
-    X_test[cate_feature] = test_df.loc[:, cate_feature]
+    X[cate_feature] = train_df.loc[:, cate_feature].fillna(most_cate)
+    X_test[cate_feature] = test_df.loc[:, cate_feature].fillna(most_cate)
     test_vid = test_df['vid']
     return X, y, X_test, num_feature, cate_feature, label, test_vid
 
@@ -121,13 +121,13 @@ def get_best_params():
         'boosting_type': 'gbdt',
         'objective': 'regression_l2',
         'metric': 'rmse',
-        'sub_feature': 0.6,
-        'num_leaves': 60,
-        'min_data': 150,
+        'sub_feature': 0.52,
+        'num_leaves': 80,
+        'min_data': 120,
         'min_hessian': 1,
-        'verbose': -1,
         'bagging_fraction': 0.80,
-        'bagging_freq': 50
+        'bagging_freq': 50,
+        'verbose': -1,
     }
     return params
 
@@ -160,11 +160,11 @@ def separate_model():
     y_pred_df = pd.DataFrame()
     
     print('Total Feature: %s' %((len(X.columns))))
-
+    print(params)
     has_eval = 1    # 是否有验证集，无则需要 CV 验证
     if has_eval:
         X_train, X_eval, y_train, y_eval = train_test_split(
-            X, y, test_size=0.2, random_state=2018)
+            X, y, test_size=0.2, random_state=0)
     else:
         X_train, y_train = X, y
 
