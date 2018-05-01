@@ -47,19 +47,19 @@ def get_data():
     # 获取特征列表，并填充 NaN
     num_feature = train_df.describe().columns.values.tolist()[5:]
     label = train_df.describe().columns.values.tolist()[0:5]
-    cate_feature = train_df.describe(include='category').columns.values.tolist()
-
+    # cate_feature = train_df.describe(include='category').columns.values.tolist()
+    cate_feature = {}
     most_num = train_df[num_feature+label].mean()
-    most_cate ={}
-    for col in cate_feature:
-        most_cate[col] = train_df[col].value_counts().index[0]
+    # most_cate ={}
+    # for col in cate_feature:
+        # most_cate[col] = train_df[col].value_counts().index[0]
 
     X = train_df.loc[:, num_feature].fillna(most_num)
     y = train_df.loc[:, label].fillna(most_num)
     X_test = test_df.loc[:, num_feature].fillna(most_num)
     
-    X[cate_feature] = train_df.loc[:, cate_feature].fillna(most_cate)
-    X_test[cate_feature] = test_df.loc[:, cate_feature].fillna(most_cate)
+    # X[cate_feature] = train_df.loc[:, cate_feature].fillna(most_cate)
+    # X_test[cate_feature] = test_df.loc[:, cate_feature].fillna(most_cate)
     test_vid = test_df['vid']
     return X, y, X_test, num_feature, cate_feature, label, test_vid
 
