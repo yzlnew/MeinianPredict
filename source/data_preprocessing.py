@@ -116,6 +116,7 @@ merged_test_df.loc[2327, '1840'] = '<=5.0'
 
 merged_train_df.loc[21196,'2405'] = np.nan    # 异常大
 merged_train_df.loc[33729,'0424'] = np.nan    # 异常小
+merged_train_df.loc[21196,'2403'] = np.nan
 
 # RF 得到的特征重要性
 low_importance = ['269024', '979013', '979018', '1325', '979014', '1326']
