@@ -166,6 +166,32 @@ def convert_0974(data):
             return 3    
     return np.nan
 
+def convert_100010(data):
+    if data == data:
+        if data in ['-','阴性','0(-)']:
+            return 0
+        if data in ['+','+-'] or re.search(r'(阳性|1\+|\+1)',data):
+            return 1
+        if data == '++' or re.search(r'(\+-|\+2|2\+)',data):
+            return 2
+        if data =='+++' or re.search(r'(3\+|\+3)',data):
+            return 3
+        if re.search(r'-',data):
+            return 0
+    return np.nan
+
+def convert_1305(data):
+    if data == data:
+        if re.search(r'老年',data):
+            return 3
+        if re.search(r'(斑|翳)',data):
+            return 2
+        if re.search(r'角膜炎',data):
+            return 1
+        if re.search(r'(正常|未见|透明)',data):
+            return 0
+    return np.nan
+
 for df in combine:
     type = 'float'
     df['0124'] = df['0124'].apply(convert_0124).astype(type)
@@ -188,7 +214,9 @@ for df in combine:
     df['0973'] = df['0973'].apply(convert_0973).astype(type)
     df['0974'] = df['0974'].apply(convert_0974).astype(type)
     df['0976'] = df['0976'].apply(converter(r'(无|弃查)')).astype(type)
-
+    df['100010'] = df['100010'].apply(convert_100010).astype(type)
+    df['1315'] = df['1315'].apply(converter(r'(未|正常)')).astype(type)
+    df['1305'] = df['1305'].apply(convert_1305).astype(type)
 print('done!time used: %s s' %(time.time()-start))
 
 merged_train_df.to_pickle('../data/data_train.pkl')
