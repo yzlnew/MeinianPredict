@@ -192,6 +192,106 @@ def convert_1305(data):
             return 0
     return np.nan
 
+def convert_30007(data):
+    if data == data:
+        if re.search(r'(未|正)', data):
+            return 0
+        elif re.search(r'(Ⅰ|i)',data):
+            return 1
+        elif re.search(r'(Ⅱ|ii)',data):
+            return 2
+        elif re.search(r'(III|iii)',data):
+            return 3
+        elif re.search(r'Ⅳ',data):
+            return 4
+    return np.nan
+
+def convert_3189(data):
+    if data == data:
+        if data in ['-', '阴性'] :
+            return 0
+        elif data in ['0', '0.6', '1.4', '2.8', '+-']:
+            return 1
+        elif data in ['+', '阳性', '阳性(+)']:
+            return 2
+        elif data in ['++', '+++', '9.0']:
+            return 3
+    return np.nan
+
+def convert_3190(data):
+    if data == data:
+        if data in ['++++', '≥55(+4)', '+++', '3+', '+-', '2.8(+-)'] :
+            return 0
+        elif data in ['++', '2+', '+', '阳性(+)']:
+            return 1
+        elif data in ['-', '0(-)'] or re.search(r'0mmol/L|阴', data):
+            return 2
+    return np.nan
+
+def convert_3191(data):
+    if data == data:
+        if data in ['+++', '++'] :
+            return 0
+        elif data in ['+', '8.6(+1)', '阳性(+)']:
+            return 1
+        elif data in ['-', '0(-)'] or re.search(r'0mmol/L|阴', data):
+            return 2
+    return np.nan
+
+def convert_3192(data):
+    if data == data:
+        if data in ['+++', '4.0(+2)', '++'] :
+            return 0
+        elif data in ['+', '阳性(+)', '+-', '0.5(+-)']:
+            return 1
+        elif data in ['-', '0(-)'] or re.search(r'0mmol/L|阴', data):
+            return 2
+    return np.nan
+
+def convert_3194(data):
+    if data == data:
+        if data in ['+++', '++', '+-'] :
+            return 0
+        elif data in ['+', '阳性(+)']:
+            return 1
+        elif data in ['-', '阴性']:
+            return 2
+    return np.nan
+
+def convert_3195(data):
+    if data == data:
+        if data in ['+++'] :
+            return 0
+        elif data in ['++', '2+'] or re.search('\+-|\+2', data):
+            return 1
+        elif data in ['+'] or re.search(r'阳|\+1|1\+',data):
+            return 2
+        elif data in ['-', '阴性', '0(-)'] or re.search(r'0g/L',data):
+            return 3
+    return np.nan
+
+def convert_3196(data):
+    if data == data:
+        if data in ['正常', 'Normal', '3.4']:
+            return 0
+        elif re.search('\+|5.', data):
+            return 1
+        elif re.search('\-', data):
+            return 2
+    return np.nan
+
+def convert_3197(data):
+    if data == data:
+        if data == '-':
+            return 0
+        elif data == '+':
+            return 1
+        elif data == '阴性':
+            return 2
+        elif data == '+-':
+            return 3
+    return np.nan
+
 for df in combine:
     type = 'float'
     df['0124'] = df['0124'].apply(convert_0124).astype(type)
@@ -217,6 +317,18 @@ for df in combine:
     df['100010'] = df['100010'].apply(convert_100010).astype(type)
     df['1315'] = df['1315'].apply(converter(r'(未|正常)')).astype(type)
     df['1305'] = df['1305'].apply(convert_1305).astype(type)
+
+    # by zk
+    df['30007'] = df['30007'].apply(convert_30007).astype(type)
+    df['3189'] = df['3189'].apply(convert_3189).astype(type)
+    df['3190'] = df['3190'].apply(convert_3190).astype(type)
+    df['3191'] = df['3191'].apply(convert_3191).astype(type)
+    df['3192'] = df['3192'].apply(convert_3192).astype(type)
+    df['3194'] = df['3194'].apply(convert_3194).astype(type)
+    df['3195'] = df['3195'].apply(convert_3195).astype(type)
+    df['3196'] = df['3196'].apply(convert_3196).astype(type)
+    df['3197'] = df['3197'].apply(convert_3197).astype(type)
+
 print('done!time used: %s s' %(time.time()-start))
 
 merged_train_df.to_pickle('../data/data_train.pkl')
