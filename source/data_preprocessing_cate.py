@@ -329,6 +329,12 @@ for df in combine:
     df['3196'] = df['3196'].apply(convert_3196).astype(type)
     df['3197'] = df['3197'].apply(convert_3197).astype(type)
 
+    # by lyf
+    df['3207'] = df['3207'].apply(converter(r'(未|-|阴)')).astype(type)
+    df['3400'] = df['3400'].apply(converter(r'(透明)')).astype(type)
+    df['3485'] = df['3485'].apply(converter(r'未|^-$|阴')).astype(type)
+    df['3730'] = df['3730'].apply(converter(r'未|^0$|阴')).astype(type)
+
 print('done!time used: %s s' %(time.time()-start))
 
 merged_train_df.to_pickle('../data/data_train.pkl')
