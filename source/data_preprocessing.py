@@ -12,7 +12,8 @@ from sklearn import preprocessing
 
 warnings.filterwarnings("ignore")
 
-data = pd.read_csv('../data/data_keep_50000.csv', low_memory=False)
+data = pd.read_pickle('../data/data_keep_57200.pkl')
+data['vid'] = data.index
 train_df = pd.read_csv('../data/meinian_round1_train_20180408.csv')
 test_df = pd.read_csv('../data/meinian_round1_test_a_20180409.csv')
 
@@ -119,7 +120,7 @@ merged_train_df.loc[33729,'0424'] = np.nan    # 异常小
 merged_train_df.loc[21196,'2403'] = np.nan
 
 # RF 得到的特征重要性
-low_importance = ['269024', '979013', '979018', '1325', '979014', '1326']
+low_importance = []
 print('Drop %s features' %(len(low_importance)))
 
 for df in combine:
