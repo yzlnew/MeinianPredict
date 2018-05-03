@@ -20,7 +20,7 @@ from skopt.utils import use_named_args
 warnings.filterwarnings("ignore")
 
 
-def lgbm(x, y, params, has_eval, num_boost_round=700):
+def lgbm(x, y, params, has_eval, num_boost_round=750):
     """generate gbdt
 
     :x: train feature
