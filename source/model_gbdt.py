@@ -16,6 +16,7 @@ from sklearn.model_selection import (ShuffleSplit, cross_val_score,
 from skopt import gp_minimize
 from skopt.space import Integer, Real
 from skopt.utils import use_named_args
+from selection_utils import get_low_importance
 
 warnings.filterwarnings("ignore")
 
@@ -43,7 +44,9 @@ def get_data():
     # 读取数据
     train_df = pd.read_pickle('../data/data_train.pkl')
     test_df = pd.read_pickle('../data/data_test.pkl')
-
+    low_importance = get_low_importance('../model/gbdt_model2018-05-03_1853_4_0.029917.txt')
+    train_df.drop(columns=low_importance, inplace=True)
+    test_df.drop(columns=low_importance, inplace=True)
     # 获取特征列表，并填充 NaN
     num_feature = train_df.describe().columns.values.tolist()[5:]
     label = train_df.describe().columns.values.tolist()[0:5]
