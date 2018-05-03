@@ -31,7 +31,7 @@ for col in non_numerical_feature:
 # 二分类转换器：0,1
 def converter(pat):
     def convert(data):
-        if data==data:
+        if not pd.isna(data):
             if re.search(pat, data):
                 return 0
             else:
@@ -40,7 +40,7 @@ def converter(pat):
     return convert
 
 def convert_0421(data):
-    if data == data:
+    if not pd.isna(data):
         normal = ['整齐','齐','正常','整','整齐;整齐','齐;齐','未见异常']
         if data in normal:
             return 0
@@ -55,7 +55,7 @@ def convert_0421(data):
     return np.nan
 
 def convert_0423(data):
-    if data == data:
+    if not pd.isna(data):
         if re.search(r'(正常|未见)',data):
             return 0
         elif re.search(r'粗',data):
@@ -69,7 +69,7 @@ def convert_0423(data):
     return np.nan
 
 def convert_0440(data):
-    if data == data:
+    if not pd.isna(data):
         if data.isdigit():
             return float(data) - 86
         elif re.search(r'(无|未)',data):
@@ -79,7 +79,7 @@ def convert_0440(data):
     return np.nan
 
 def convert_0429(data):
-    if data == data:
+    if not pd.isna(data):
         if re.search(r'(无|未见)',data):
             return 0
         elif re.search(r'减',data):
@@ -89,7 +89,7 @@ def convert_0429(data):
     return np.nan
 
 def convert_0435(data):
-    if data == data:
+    if not pd.isna(data):
         if re.search(r'(未见|软|正常)',data):
             return 0
         elif re.search(r'肠鸣',data):
@@ -101,7 +101,7 @@ def convert_0435(data):
     return np.nan
 
 def convert_0436(data):
-    if data == data:
+    if not pd.isna(data):
         if re.search(r'(未|无)',data):
             return 0
         elif re.search(r'青霉素',data):
@@ -115,7 +115,7 @@ def convert_0436(data):
     return np.nan
 
 def convert_0216(data):
-    if data == data:
+    if not pd.isna(data):
         if re.search(r'(正常|未见)',data):
             return 0
         elif re.search(r'悬雍垂肥大',data):
@@ -129,7 +129,7 @@ def convert_0216(data):
     return np.nan
 
 def convert_0124(data):
-    if data == data:
+    if not pd.isna(data):
         if re.search(r'\d',data):
             return 1
         else:
@@ -137,7 +137,7 @@ def convert_0124(data):
     return np.nan
 
 def convert_0901(data):
-    if data == data:
+    if not pd.isna(data):
         if re.search(r'白癜风',data):
             return 1
         else:
@@ -145,7 +145,7 @@ def convert_0901(data):
     return np.nan
 
 def convert_0973(data):
-    if data == data:
+    if not pd.isna(data):
         if re.search(r'(无|未|弃)',data):
             return 0
         elif re.search(r'已手术',data):
@@ -155,7 +155,7 @@ def convert_0973(data):
     return np.nan
 
 def convert_0974(data):
-    if data == data:
+    if not pd.isna(data):
         if re.search(r'(无|弃|未)',data):
             return 0
         elif re.search(r'疹',data):
@@ -167,7 +167,7 @@ def convert_0974(data):
     return np.nan
 
 def convert_100010(data):
-    if data == data:
+    if not pd.isna(data):
         if data in ['-','阴性','0(-)']:
             return 0
         if data in ['+','+-'] or re.search(r'(阳性|1\+|\+1)',data):
@@ -181,7 +181,7 @@ def convert_100010(data):
     return np.nan
 
 def convert_1305(data):
-    if data == data:
+    if not pd.isna(data):
         if re.search(r'老年',data):
             return 3
         if re.search(r'(斑|翳)',data):
@@ -193,7 +193,7 @@ def convert_1305(data):
     return np.nan
 
 def convert_30007(data):
-    if data == data:
+    if not pd.isna(data):
         if re.search(r'(未|正)', data):
             return 0
         elif re.search(r'(Ⅰ|i)',data):
@@ -207,7 +207,7 @@ def convert_30007(data):
     return np.nan
 
 def convert_3189(data):
-    if data == data:
+    if not pd.isna(data):
         if data in ['-', '阴性'] :
             return 0
         elif data in ['0', '0.6', '1.4', '2.8', '+-']:
@@ -219,7 +219,7 @@ def convert_3189(data):
     return np.nan
 
 def convert_3190(data):
-    if data == data:
+    if not pd.isna(data):
         if data in ['++++', '≥55(+4)', '+++', '3+', '+-', '2.8(+-)'] :
             return 0
         elif data in ['++', '2+', '+', '阳性(+)']:
@@ -229,7 +229,7 @@ def convert_3190(data):
     return np.nan
 
 def convert_3191(data):
-    if data == data:
+    if not pd.isna(data):
         if data in ['+++', '++'] :
             return 0
         elif data in ['+', '8.6(+1)', '阳性(+)']:
@@ -239,7 +239,7 @@ def convert_3191(data):
     return np.nan
 
 def convert_3192(data):
-    if data == data:
+    if not pd.isna(data):
         if data in ['+++', '4.0(+2)', '++'] :
             return 0
         elif data in ['+', '阳性(+)', '+-', '0.5(+-)']:
@@ -249,7 +249,7 @@ def convert_3192(data):
     return np.nan
 
 def convert_3194(data):
-    if data == data:
+    if not pd.isna(data):
         if data in ['+++', '++', '+-'] :
             return 0
         elif data in ['+', '阳性(+)']:
@@ -259,7 +259,7 @@ def convert_3194(data):
     return np.nan
 
 def convert_3195(data):
-    if data == data:
+    if not pd.isna(data):
         if data in ['+++'] :
             return 0
         elif data in ['++', '2+'] or re.search('\+-|\+2', data):
@@ -271,7 +271,7 @@ def convert_3195(data):
     return np.nan
 
 def convert_3196(data):
-    if data == data:
+    if not pd.isna(data):
         if data in ['正常', 'Normal', '3.4']:
             return 0
         elif re.search('\+|5.', data):
@@ -281,7 +281,7 @@ def convert_3196(data):
     return np.nan
 
 def convert_3197(data):
-    if data == data:
+    if not pd.isna(data):
         if data == '-':
             return 0
         elif data == '+':
