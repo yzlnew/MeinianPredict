@@ -292,6 +292,98 @@ def convert_3197(data):
             return 3
     return np.nan
 
+def convert_0409_0(data):
+    if not pd.isna(data):
+        if re.search(r'高.*血压|血压.*高', data):# and re.search(r'高',data):
+            return 1
+        else:
+            return 0
+    return np.nan
+
+def convert_0409_1(data):
+    if not pd.isna(data):
+        if re.search(r'高.*血脂|血脂.*高', data):# and re.search(r'高',data):
+            return 1
+        else:
+            return 0
+    return np.nan
+
+def convert_0409_2(data):
+    if not pd.isna(data):
+        if re.search(r'高.*血糖|血糖.*高|糖尿病', data):# and re.search(r'高',data):
+            return 1
+        else:
+            return 0
+    return np.nan
+
+def convert_0434_0(data):
+    if not pd.isna(data):
+        if re.search(r'高.*血压|血压.*高', data):# and re.search(r'高',data):
+            return 1
+        else:
+            return 0
+    return np.nan
+
+def convert_0434_1(data):
+    if not pd.isna(data):
+        if re.search(r'高.*血脂|血脂.*高', data):# and re.search(r'高',data):
+            return 1
+        else:
+            return 0
+    return np.nan
+
+def convert_0434_2(data):
+    if not pd.isna(data):
+        if re.search(r'高.*血糖|血糖.*高|糖尿病', data):# and re.search(r'高',data):
+            return 1
+        else:
+            return 0
+    return np.nan
+
+def convert_0434_3(data):
+    if not pd.isna(data):
+        if re.search(r'脂肪肝', data):# and re.search(r'高',data):
+            return 1
+        else:
+            return 0
+    return np.nan
+
+def convert_4001(data):
+    if not pd.isna(data):
+        if re.search(r'正常|未见|良好', data):
+            return 0
+        elif re.search(r'轻度', data):
+            return 1
+        elif re.search(r'中度', data):
+            return 2
+        elif re.search(r'重度', data):
+            return 3
+    return np.nan
+
+def convert_2228(data):
+    if not pd.isna(data):
+        if re.search(r'阳|\+', data):
+            return 1
+        elif re.search(r'阴|未|-', data):
+            return 0
+    return np.nan
+
+def convert_0975(data):
+    if not pd.isna(data):
+        if re.search(r'无|未|nan', data):
+            return 0
+        elif re.search(r'脂肪瘤', data):
+            return 1
+    return np.nan
+
+def convert_300005(data):
+    if not pd.isna(data):
+        if re.search(r'阴|未|-', data):
+            return 0
+        else:
+            return 1
+    return np.nan
+
 for df in combine:
     type = 'float'
     df['0124'] = df['0124'].apply(convert_0124).astype(type)
@@ -328,6 +420,26 @@ for df in combine:
     df['3195'] = df['3195'].apply(convert_3195).astype(type)
     df['3196'] = df['3196'].apply(convert_3196).astype(type)
     df['3197'] = df['3197'].apply(convert_3197).astype(type)
+    # by zk2
+    df['0409_0'] = df['0409'].apply(convert_0409_0).astype(type)
+    df['0409_1'] = df['0409'].apply(convert_0409_1).astype(type)
+    df['0409_2'] = df['0409'].apply(convert_0409_2).astype(type)
+    df['0434_0'] = df['0434'].apply(convert_0434_0).astype(type)
+    df['0434_1'] = df['0434'].apply(convert_0434_1).astype(type)
+    df['0434_2'] = df['0434'].apply(convert_0434_2).astype(type)
+    df['0434_3'] = df['0434'].apply(convert_0434_3).astype(type)
+    df['4001'] = df['4001'].apply(convert_4001).astype(type)
+    df['2228'] = df['2228'].apply(convert_2228).astype(type)
+    df['2229'] = df['2229'].apply(convert_2228).astype(type)
+    df['2231'] = df['2231'].apply(convert_2228).astype(type)
+    df['2233'] = df['2233'].apply(convert_2228).astype(type)
+    df['3301'] = df['3301'].apply(convert_2228).astype(type)
+    #by zk3
+    df['0975'] = df['0975'].apply(convert_0975).astype(type)
+    df['300005'] = df['300005'].apply(convert_300005).astype(type)
+    df['300018'] = df['300018'].apply(convert_300005).astype(type)
+    df['300019'] = df['300019'].apply(convert_300005).astype(type)
+    df['300036'] = df['300036'].apply(convert_300005).astype(type)
 
     # by lyf
     df['3207'] = df['3207'].apply(converter(r'(未|-|阴)')).astype(type)
