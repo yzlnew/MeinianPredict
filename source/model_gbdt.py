@@ -147,12 +147,6 @@ def universal_model():
     Y_pred_gbdt_df = Y_pred_gbdt_df.round(3)
     Y_pred_gbdt_df.to_csv('../data/gbdt_output_tuned.csv', index=False, header=False)
 
-
-def universal_cvtest():
-    values = [0.52, 60, 110]
-    objective(values)
-
-
 def separate_model():
     X, y, X_test, num_feature, cate_feature, label, test_vid = get_data()
 
@@ -206,7 +200,4 @@ def separate_model():
     y_pred_gbdt_df.to_csv('../data/gbdt/gbdt_output_log1p_'+time_stamp+str(score)+'.csv', index=False, header=False)
 
 if __name__ == '__main__':
-    # X, y, X_test, feature, label, test_vid = get_data()
-    # cvtest()
-    # main()
     separate_model()
