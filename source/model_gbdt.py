@@ -20,7 +20,7 @@ from skopt.utils import use_named_args
 warnings.filterwarnings("ignore")
 
 
-def lgbm(x, y, params, has_eval, num_boost_round=800):
+def lgbm(x, y, params, has_eval, num_boost_round=700):
     """generate gbdt
 
     :x: train feature
@@ -91,7 +91,7 @@ def universal_objective(values):
 
     rmse = []
     X_train, X_eval, y_train, y_eval = train_test_split(
-        X, y, test_size=0.2, random_state=2018)
+        X, y, test_size=0.2, random_state=0)
     for i in range(5):
         # X_train, y_train = X, y
         gbm = lgbm(X_train, y_train.iloc[:, i], params)
@@ -179,11 +179,11 @@ def separate_model():
     is_original = [0,0,0,0,0]    # 是否是原始数据，否则进行 log1p 处理
     gbm_store = [0]*5
     rmse = [0]*5
-    if_cv = 0    # 是否需要 CV
+    no_cv = 1    # 是否需要 CV
     params_store = [params]*5
     for i, params in enumerate(params_store):
         y_train_model = y_train.iloc[:, i] if is_original[i] else np.log1p(y_train.iloc[:, i])
-        gbm = lgbm(X_train, y_train_model, params, has_eval)
+        gbm = lgbm(X_train, y_train_model, params, no_cv)
         gbm_store[i] = gbm
         if has_eval:
             y_eval_model = y_eval.iloc[:, i]
