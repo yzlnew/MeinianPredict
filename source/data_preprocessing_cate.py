@@ -39,6 +39,16 @@ def converter(pat):
         return np.nan
     return convert
 
+def converter_reverse(pat):
+    def convert(data):
+        if not pd.isna(data):
+            if re.search(pat, data):
+                return 1
+            else:
+                return 0
+        return np.nan
+    return convert
+
 def convert_0421(data):
     if not pd.isna(data):
         normal = ['整齐','齐','正常','整','整齐;整齐','齐;齐','未见异常']
@@ -316,6 +326,62 @@ def convert_0409_2(data):
             return 0
     return np.nan
 
+def convert_0409_3(data):
+    if not pd.isna(data):
+        if re.search(r'肥胖', data):# and re.search(r'高',data):
+            return 1
+        else:
+            return 0
+    return np.nan
+
+def convert_0409_4(data):
+    if not pd.isna(data):
+        if re.search(r'甲状腺', data):# and re.search(r'高',data):
+            return 1
+        else:
+            return 0
+    return np.nan
+
+def convert_0409_5(data):
+    if not pd.isna(data):
+        if re.search(r'脂肪', data):# and re.search(r'高',data):
+            return 1
+        else:
+            return 0
+    return np.nan
+
+def convert_0409_6(data):
+    if not pd.isna(data):
+        if re.search(r'肾', data):# and re.search(r'高',data):
+            return 1
+        else:
+            return 0
+    return np.nan
+
+def convert_0409_7(data):
+    if not pd.isna(data):
+        if re.search(r'心动过速', data):# and re.search(r'高',data):
+            return 1
+        else:
+            return 0
+    return np.nan
+
+def convert_0409_8(data):
+    if not pd.isna(data):
+        if re.search(r'心动过缓', data):# and re.search(r'高',data):
+            return 1
+        else:
+            return 0
+    return np.nan
+
+def convert_0409_9(data):
+    if not pd.isna(data):
+        if re.search(r'肝', data):# and re.search(r'高',data):
+            return 1
+        else:
+            return 0
+    return np.nan
+
 def convert_0434_0(data):
     if not pd.isna(data):
         if re.search(r'高.*血压|血压.*高', data):# and re.search(r'高',data):
@@ -384,6 +450,26 @@ def convert_300005(data):
             return 1
     return np.nan
 
+def convert_woman(data):
+    if not pd.isna(data):
+        return '女'
+    else:
+        return ''
+
+def convert_man(data):
+    if not pd.isna(data):
+        return '男'
+    else:
+        return ''
+
+def convert_sex(data):
+    if not pd.isna(data):
+        if re.search(r'男', data):
+            return 0
+        elif re.search(r'女', data):
+            return 1
+    return np.nan
+
 for df in combine:
     type = 'float'
     df['0124'] = df['0124'].apply(convert_0124).astype(type)
@@ -421,13 +507,20 @@ for df in combine:
     df['3196'] = df['3196'].apply(convert_3196).astype(type)
     df['3197'] = df['3197'].apply(convert_3197).astype(type)
     # by zk2
-    df['0409_0'] = df['0409'].apply(convert_0409_0).astype(type)
-    df['0409_1'] = df['0409'].apply(convert_0409_1).astype(type)
-    df['0409_2'] = df['0409'].apply(convert_0409_2).astype(type)
-    df['0434_0'] = df['0434'].apply(convert_0434_0).astype(type)
-    df['0434_1'] = df['0434'].apply(convert_0434_1).astype(type)
-    df['0434_2'] = df['0434'].apply(convert_0434_2).astype(type)
-    df['0434_3'] = df['0434'].apply(convert_0434_3).astype(type)
+    df['0409_0434'] = df['0409'] + df['0434']
+    df['0409_0434_0'] = df['0409_0434'].apply(converter_reverse(r'血压')).astype(type)
+    df['0409_0434_1'] = df['0409_0434'].apply(converter_reverse(r'血脂')).astype(type)
+    df['0409_0434_2'] = df['0409_0434'].apply(converter_reverse(r'糖')).astype(type)
+    df['0409_0434_3'] = df['0409_0434'].apply(converter_reverse(r'肥胖')).astype(type)
+    df['0409_0434_4'] = df['0409_0434'].apply(converter_reverse(r'甲状腺')).astype(type)
+    df['0409_0434_5'] = df['0409_0434'].apply(converter_reverse(r'肾')).astype(type)
+    df['0409_0434_6'] = df['0409_0434'].apply(converter_reverse(r'脂肪')).astype(type)
+    df['0409_0434_7'] = df['0409_0434'].apply(converter_reverse(r'心动过速')).astype(type)
+    df['0409_0434_8'] = df['0409_0434'].apply(converter_reverse(r'心动过缓')).astype(type)
+    df['0409_0434_9'] = df['0409_0434'].apply(converter_reverse(r'心律')).astype(type)
+    df['0409_0434_10'] = df['0409_0434'].apply(converter_reverse(r'肝')).astype(type)
+    df['0409_0434_11'] = df['0409_0434'].apply(converter_reverse(r'冠心')).astype(type)
+    df['0413'] = df['0413'].apply(converter_reverse(r'低盐|低脂|血糖|血压')).astype(type)
     df['4001'] = df['4001'].apply(convert_4001).astype(type)
     df['2228'] = df['2228'].apply(convert_2228).astype(type)
     df['2229'] = df['2229'].apply(convert_2228).astype(type)
@@ -436,10 +529,19 @@ for df in combine:
     df['3301'] = df['3301'].apply(convert_2228).astype(type)
     #by zk3
     df['0975'] = df['0975'].apply(convert_0975).astype(type)
+    df['3429'] = df['3429'].apply(convert_300005).astype(type)
     df['300005'] = df['300005'].apply(convert_300005).astype(type)
     df['300018'] = df['300018'].apply(convert_300005).astype(type)
     df['300019'] = df['300019'].apply(convert_300005).astype(type)
     df['300036'] = df['300036'].apply(convert_300005).astype(type)
+
+    # by zk4
+    df['sex'] = df['0120'].apply(convert_man)
+    for col_name in ['0981', '0982', '0983', '0984']:
+        df['sex'] = df['sex'].str.cat(df[col_name].apply(convert_man))
+    for col_name in ['0121', '0122', '0123', '0503', '0509', '0539']:
+        df['sex'] = df['sex'].str.cat(df[col_name].apply(convert_woman))
+    df['sex'] = df['sex'].apply(convert_sex).astype(type)
 
     # by lyf
     df['3207'] = df['3207'].apply(converter(r'(未|-|阴)')).astype(type)
