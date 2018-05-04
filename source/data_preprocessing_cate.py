@@ -9,6 +9,7 @@ import pandas as pd
 import seaborn as sns
 import time
 from sklearn import preprocessing
+from selection_utils import convert_mixed_num
 
 warnings.filterwarnings("ignore")
 
@@ -478,6 +479,51 @@ def convert_eyes(data):
             return 0
     return np.nan
 
+def convert_300018(data):
+    if not pd.isna(data):
+        if re.search(r'阴性|^-$',data):
+            return 0
+        return convert_mixed_num(data)
+    return np.nan
+
+def convert_300036(data):
+    if not pd.isna(data):
+        if re.search(r'阴性|^-$',data):
+            return 0
+        if data == '+-':
+            return 30
+        if data == '+':
+            return 40
+        return convert_mixed_num(data)
+    return np.nan
+
+def convert_3203(data):
+    if not pd.isna(data):
+        if re.search(r'未见',data):
+            return 0
+        return convert_mixed_num(data)
+    return np.nan
+ 
+def convert_A702(data):
+    if not pd.isna(data):
+        if re.search(r'nan',data):
+            return 0
+        return convert_mixed_num(data)
+    return np.nan    
+
+def convert_I49012(data):
+    if not pd.isna(data):
+        if data == '-':
+            return 0
+        if re.search(r'\+1',data) or data in ['+-','+']:
+            return 1.4
+        if re.search(r'\+3',data) or data == '+++':
+            return 5.6
+        if data == '++':
+            return 2.8
+        return convert_mixed_num(data)
+    return np.nan      
+
 for df in combine:
     type = 'float'
     df['0124'] = df['0124'].apply(convert_0124).astype(type)
@@ -503,6 +549,13 @@ for df in combine:
     df['100010'] = df['100010'].apply(convert_100010).astype(type)
     df['1315'] = df['1315'].apply(converter(r'(未|正常)')).astype(type)
     df['1305'] = df['1305'].apply(convert_1305).astype(type)
+    df['300018'] = df['300018'].apply(convert_300018).astype(type)
+    df['300019'] = df['300019'].apply(convert_300018).astype(type)
+    # df['300036'] = df['300036'].apply(convert_300036).astype(type)
+    df['3203'] = df['3203'].apply(convert_3203).astype(type)
+    df['A702'] = df['A702'].apply(convert_A702).astype(type)
+    df['A704'] = df['A704'].apply(convert_A702).astype(type)
+    df['I49012'] = df['I49012'].apply(convert_I49012).astype(type)
 
     # by zk
     df['30007'] = df['30007'].apply(convert_30007).astype(type)
@@ -523,11 +576,11 @@ for df in combine:
     df['0409_0434_4'] = df['0409_0434'].apply(converter_reverse(r'甲状腺')).astype(type)
     df['0409_0434_5'] = df['0409_0434'].apply(converter_reverse(r'肾')).astype(type)
     df['0409_0434_6'] = df['0409_0434'].apply(converter_reverse(r'脂肪')).astype(type)
-    df['0409_0434_7'] = df['0409_0434'].apply(converter_reverse(r'心动过速')).astype(type)
-    df['0409_0434_8'] = df['0409_0434'].apply(converter_reverse(r'心动过缓')).astype(type)
-    df['0409_0434_9'] = df['0409_0434'].apply(converter_reverse(r'心律')).astype(type)
+    # df['0409_0434_7'] = df['0409_0434'].apply(converter_reverse(r'心动过速')).astype(type)
+    # df['0409_0434_8'] = df['0409_0434'].apply(converter_reverse(r'心动过缓')).astype(type)
+    # df['0409_0434_9'] = df['0409_0434'].apply(converter_reverse(r'心律')).astype(type)
     df['0409_0434_10'] = df['0409_0434'].apply(converter_reverse(r'肝')).astype(type)
-    df['0409_0434_11'] = df['0409_0434'].apply(converter_reverse(r'冠心')).astype(type)
+    # df['0409_0434_11'] = df['0409_0434'].apply(converter_reverse(r'冠心')).astype(type)
     df['0413'] = df['0413'].apply(converter_reverse(r'低盐|低脂|血糖|血压')).astype(type)
     df['4001'] = df['4001'].apply(convert_4001).astype(type)
     df['2228'] = df['2228'].apply(convert_2228).astype(type)
@@ -539,9 +592,9 @@ for df in combine:
     df['0975'] = df['0975'].apply(convert_0975).astype(type)
     df['3429'] = df['3429'].apply(convert_300005).astype(type)
     df['300005'] = df['300005'].apply(convert_300005).astype(type)
-    df['300018'] = df['300018'].apply(convert_300005).astype(type)
-    df['300019'] = df['300019'].apply(convert_300005).astype(type)
-    df['300036'] = df['300036'].apply(convert_300005).astype(type)
+    # df['300018'] = df['300018'].apply(convert_300005).astype(type)
+    # df['300019'] = df['300019'].apply(convert_300005).astype(type)
+    # df['300036'] = df['300036'].apply(convert_300005).astype(type)
 
     # by zk4
     df['sex'] = df['0120'].apply(convert_man)
