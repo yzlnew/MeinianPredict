@@ -42,6 +42,6 @@ if __name__ == '__main__':
     merged_test_df = pd.read_pickle('../data/data_test_num.pkl')
     combine = [merged_train_df, merged_test_df]
     LDA_feature(combine, '0113', 5)
-    # LDA_feature(combine, '0912', 5)  # 效果不佳
+    LDA_feature(combine, '0912', 3)  # 5效果不佳
     merged_train_df.to_pickle('../data/data_train_lda.pkl')
     merged_test_df.to_pickle('../data/data_test_lda.pkl')
