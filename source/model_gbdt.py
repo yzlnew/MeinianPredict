@@ -13,6 +13,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import log_loss, mean_squared_log_error
 from sklearn.model_selection import (ShuffleSplit, cross_val_score,
                                      train_test_split)
+from sklearn.model_selection import KFold
 from skopt import gp_minimize
 from skopt.space import Integer, Real
 from skopt.utils import use_named_args
@@ -150,6 +151,22 @@ def universal_model():
     Y_pred_gbdt_df = Y_pred_gbdt_df.round(3)
     Y_pred_gbdt_df.to_csv('../data/gbdt_output_tuned.csv', index=False, header=False)
 
+def cv_test(model):
+    X, y, X_test, num_feature, cate_feature, label, test_vid = get_data()
+    params = get_best_params()
+    y_pred_df = pd.DataFrame()
+    
+    kf = KFold(n_splits=5)
+    scores=[]
+    for train, test in kf.split(X):
+        X_train, X_test, y_train, y_test = X.iloc[train], X.iloc[test], y.iloc[train], y.iloc[test]
+        y_train_model = np.log1p(y_train.iloc[:, model])
+        gbm = lgbm(X_train, y_train_model, params, 1)
+        y_pred_test = gbm.predict(X_test, num_iteration=gbm.best_iteration)
+        scores.append(mean_squared_log_error(y_test.iloc[:,model], np.expm1(y_pred_test)))
+        print(scores[-1])
+    print(sum(scores)/len(scores))
+
 def separate_model():
     X, y, X_test, num_feature, cate_feature, label, test_vid = get_data()
 
@@ -204,3 +221,4 @@ def separate_model():
 
 if __name__ == '__main__':
     separate_model()
+    # cv_test(2)
