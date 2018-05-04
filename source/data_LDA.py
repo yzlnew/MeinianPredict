@@ -21,7 +21,7 @@ def LDA_feature(combine, col_name, n_topics):
     print('start LDA for feature %s' %col_name)
     vectorizer = CountVectorizer(min_df=1)
     train_counts = combine[0].shape[0]
-    df = combine[0].append(combine[1])
+    df = combine[0].append(combine[1],ignore_index=True)
     X = vectorizer.fit_transform(df.loc[:, col_name].dropna())
     lda = LatentDirichletAllocation(n_topics=n_topics, learning_offset=50., random_state=0)
     docres = lda.fit_transform(X)
@@ -42,6 +42,23 @@ if __name__ == '__main__':
     merged_test_df = pd.read_pickle('../data/data_test_num.pkl')
     combine = [merged_train_df, merged_test_df]
     LDA_feature(combine, '0113', 5)
-    LDA_feature(combine, '0912', 3)  # 5效果不佳
+    LDA_feature(combine, '0114', 5)
+    LDA_feature(combine, '0115', 5)
+    LDA_feature(combine, '0117', 3)
+    LDA_feature(combine, '0118', 3)
+    LDA_feature(combine, '0911', 3)
+    LDA_feature(combine, '0912', 3)
+
+    LDA_feature(combine, '1001', 3)
+    LDA_feature(combine, '2501', 3)
+
+    LDA_feature(combine, '0120', 3)
+    LDA_feature(combine, '0121', 3)
+    LDA_feature(combine, '0122', 3)
+    LDA_feature(combine, '0123', 3)
+    LDA_feature(combine, '0503', 3)
+    LDA_feature(combine, '0509', 3)
+    LDA_feature(combine, '0516', 3)
+    LDA_feature(combine, '0539', 3)
     merged_train_df.to_pickle('../data/data_train_lda.pkl')
     merged_test_df.to_pickle('../data/data_test_lda.pkl')
