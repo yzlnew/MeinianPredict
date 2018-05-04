@@ -21,7 +21,7 @@ from selection_utils import get_low_importance
 warnings.filterwarnings("ignore")
 
 
-def lgbm(x, y, params, has_eval, num_boost_round=750):
+def lgbm(x, y, params, no_cv, num_boost_round=750):
     """generate gbdt
 
     :x: train feature
@@ -35,8 +35,8 @@ def lgbm(x, y, params, has_eval, num_boost_round=750):
     start = time.time()
     gbm = lgb.train(params, lgb_train, num_boost_round=num_boost_round)
     print('Finished. %s s used' % round(time.time() - start, 2))
-    if not has_eval:
-        lgb.cv(params, lgb_train, stratified=False, num_boost_round=1000, verbose_eval=100)
+    if not no_cv:
+        lgb.cv(params, lgb_train, stratified=False, num_boost_round=1000, verbose_eval=1)
     return gbm
 
 
@@ -44,9 +44,9 @@ def get_data():
     # 读取数据
     train_df = pd.read_pickle('../data/data_train.pkl')
     test_df = pd.read_pickle('../data/data_test.pkl')
-    low_importance = get_low_importance('../model/gbdt_model2018-05-03_1853_4_0.029917.txt')
-    train_df.drop(columns=low_importance, inplace=True)
-    test_df.drop(columns=low_importance, inplace=True)
+    # low_importance = get_low_importance('../model/gbdt_model2018-05-03_1853_4_0.029917.txt')
+    # train_df.drop(columns=low_importance, inplace=True)
+    # test_df.drop(columns=low_importance, inplace=True)
     # 获取特征列表，并填充 NaN
     num_feature = train_df.describe().columns.values.tolist()[5:]
     label = train_df.describe().columns.values.tolist()[0:5]
@@ -158,7 +158,7 @@ def separate_model():
     
     print('Total Feature: %s' %((len(X.columns))))
     print(params)
-    has_eval = 1    # 是否有验证集，无则需要 CV 验证
+    has_eval = 1    # 是否划分验证集
     if has_eval:
         X_train, X_eval, y_train, y_eval = train_test_split(
             X, y, test_size=0.2, random_state=0)
