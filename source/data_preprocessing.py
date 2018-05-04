@@ -120,8 +120,8 @@ merged_train_df.loc[3163, '193'] = np.nan
 merged_train_df.loc[6055, '2333'] = 5.0    # 多了小数点
 merged_train_df.loc[5085, '269013']    # 未见，映射成0
 merged_train_df.loc[[8551, 8840, 9072, 9309], '3193'] = '>=1.030'
-merged_test_df.loc[2327, '3193'] = '>=1.030'
-merged_test_df.loc[2327, '1840'] = '<=5.0'
+# merged_test_df.loc[2327, '3193'] = '>=1.030'
+# merged_test_df.loc[2327, '1840'] = '<=5.0'
 
 merged_train_df.loc[21196,'2405'] = np.nan    # 异常大
 merged_train_df.loc[33729,'0424'] = np.nan    # 异常小
