@@ -12,8 +12,8 @@ from sklearn import preprocessing
 
 warnings.filterwarnings("ignore")
 
-merged_train_df = pd.read_pickle('../data/data_train_num.pkl')
-merged_test_df = pd.read_pickle('../data/data_test_num.pkl')
+merged_train_df = pd.read_pickle('../data/data_train_lda.pkl')
+merged_test_df = pd.read_pickle('../data/data_test_lda.pkl')
 combine = [merged_train_df, merged_test_df]
 
 numerical_feature = merged_train_df.describe().columns.values
@@ -470,6 +470,14 @@ def convert_sex(data):
             return 1
     return np.nan
 
+def convert_eyes(data):
+    if not pd.isna(data):
+        if re.search(r'硬化|变细|反光增强|病变|瘤|白内障|浑浊|不清|不能详辨|密度增高', data):
+            return 1
+        elif re.search(r'正|未|-', data):
+            return 0
+    return np.nan
+
 for df in combine:
     type = 'float'
     df['0124'] = df['0124'].apply(convert_0124).astype(type)
@@ -542,7 +550,8 @@ for df in combine:
     for col_name in ['0121', '0122', '0123', '0503', '0509', '0539']:
         df['sex'] = df['sex'].str.cat(df[col_name].apply(convert_woman))
     df['sex'] = df['sex'].apply(convert_sex).astype(type)
-
+    df['eyes'] = df['1316'].str.cat(df['1314']).str.cat(df['1330'])
+    df['eyes'] = df['eyes'].apply(convert_eyes)
     # by lyf
     df['3207'] = df['3207'].apply(converter(r'(未|-|阴)')).astype(type)
     df['3400'] = df['3400'].apply(converter(r'(透明)')).astype(type)
