@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import time
+import unicodedata
 from sklearn import preprocessing
 
 warnings.filterwarnings("ignore")
@@ -33,6 +34,12 @@ merged_train_df = pd.merge(train_df, data, on='vid', sort=False)
 merged_test_df = pd.merge(test_df, data, on='vid', sort=False)
 combine = [merged_train_df, merged_test_df]
 
+def normalize(data):
+    if not pd.isna(data):
+        # data.replace(' ','')
+        data = data.strip()
+        data = unicodedata.normalize('NFKC', data)
+    return data
 
 # 提取数值特征
 def get_num_prop(data_col):
@@ -43,15 +50,17 @@ def get_num_prop(data_col):
     return num_counts / (data_col.shape[0] - na_counts)
 
 
-numerical_feature = []
-
-for col in merged_train_df.columns.values:
-    if get_num_prop(merged_train_df[col]) > 0.5:
-        numerical_feature.append(col)
-
-numerical_feature = numerical_feature[5:]
-print('numerical feature count: %s' % len(numerical_feature))
+feature_num_prop = {}
 start = time.time()
+
+for col in merged_train_df.columns.values[6:]:
+    feature_num_prop[col] = get_num_prop(merged_train_df[col])
+    merged_train_df[col] = merged_train_df[col].apply(normalize)
+    merged_test_df[col] = merged_test_df[col].apply(normalize)
+
+numerical_feature = [k for k,v in feature_num_prop.items() if v > 0.5 ]
+num_more_than_01 = [k for k,v in feature_num_prop.items() if 0.1 < v <= 0.5 ]
+print('numerical feature count: %s' % len(numerical_feature))
 print('dealing numerical features...')
 # print(numerical_feature)
 
@@ -77,8 +86,7 @@ print('dealing numerical features...')
 
 # 处理混合数据类型
 def convert_mixed_num(data):
-    data = data.strip()
-    special_cases = ['未见', '阴性']
+    special_cases = ['未见', '阴性', '-']
     try:
         ret = float(data)
         return ret if data >=0 else np.nan    # 保证没有负数
