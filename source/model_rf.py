@@ -22,13 +22,13 @@ test_df = pd.read_csv('../data/data_test.pkl')
 # 获取数值特征列表，并填充 NaN
 feature = train_df.describe().columns.values.tolist()[5:]
 label = train_df.describe().columns.values.tolist()[0:5]
-to_fill = train_df.median()
+to_fill = train_df[feature].mean()
 X_train = train_df.loc[:, feature].fillna(to_fill)
 Y_train = train_df.loc[:, label].fillna(to_fill)
 X_test = test_df.loc[:, feature].fillna(to_fill)
 
 # 交叉验证设定
-cv = ShuffleSplit(n_splits=2, test_size=0.3, random_state=0)
+cv = ShuffleSplit(n_splits=2, test_size=0.2, random_state=0)
 
 # 随机森林
 start_time = time.time()
