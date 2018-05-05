@@ -16,8 +16,8 @@ from sklearn.model_selection import (ShuffleSplit, cross_val_score,
 warnings.filterwarnings("ignore")
 
 # 读取数据
-train_df = pd.read_csv('../data/data_train.pkl')
-test_df = pd.read_csv('../data/data_test.pkl')
+train_df = pd.read_pickle('../data/data_train.pkl')
+test_df = pd.read_pickle('../data/data_test.pkl')
 
 # 获取数值特征列表，并填充 NaN
 feature = train_df.describe().columns.values.tolist()[5:]
