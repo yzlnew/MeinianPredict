@@ -14,6 +14,7 @@ from sklearn.metrics import log_loss, mean_squared_log_error
 from sklearn.model_selection import (ShuffleSplit, cross_val_score,
                                      train_test_split)
 from sklearn.model_selection import KFold
+from sklearn.utils import shuffle
 from skopt import gp_minimize
 from skopt.space import Integer, Real
 from skopt.utils import use_named_args
@@ -60,6 +61,7 @@ def get_data():
 
     X = train_df.loc[:, num_feature].fillna(most_num)
     y = train_df.loc[:, label].fillna(most_num)
+    # X, y = shuffle(X, y, random_state=0)
     X_test = test_df.loc[:, num_feature].fillna(most_num)
     
     # X[cate_feature] = train_df.loc[:, cate_feature].fillna(most_cate)
@@ -151,12 +153,27 @@ def universal_model():
     Y_pred_gbdt_df = Y_pred_gbdt_df.round(3)
     Y_pred_gbdt_df.to_csv('../data/gbdt_output_tuned.csv', index=False, header=False)
 
+def shuffle_test(model):
+    X, y, X_test, num_feature, cate_feature, label, test_vid = get_data()
+    params = get_best_params()
+    y_pred_df = pd.DataFrame()
+    params['sub_feature'] = 0.4
+    X_train, X_eval, y_train, y_eval = train_test_split(
+            X, y, test_size=0.2, random_state=10)
+    # X_train, y_train = shuffle(X_train, y_train, random_state=0)
+    y_train_model = np.log1p(y_train.iloc[:, model])
+    gbm = lgbm(X_train, y_train_model, params, 1)
+    y_pred_eval = gbm.predict(X_eval, num_iteration=gbm.best_iteration)
+    score = mean_squared_log_error(y_eval.iloc[:,model], np.expm1(y_pred_eval))
+    print(score)
+    
+
 def cv_test(model):
     X, y, X_test, num_feature, cate_feature, label, test_vid = get_data()
     params = get_best_params()
     y_pred_df = pd.DataFrame()
-    
-    kf = KFold(n_splits=5)
+    params['sub_feature'] = 0.4
+    kf = KFold(n_splits=5,shuffle=True)
     scores=[]
     for train, test in kf.split(X):
         X_train, X_test, y_train, y_test = X.iloc[train], X.iloc[test], y.iloc[train], y.iloc[test]
@@ -166,6 +183,7 @@ def cv_test(model):
         scores.append(mean_squared_log_error(y_test.iloc[:,model], np.expm1(y_pred_test)))
         print(scores[-1])
     print(sum(scores)/len(scores))
+    return sum(scores)/len(scores)
 
 def separate_model():
     X, y, X_test, num_feature, cate_feature, label, test_vid = get_data()
@@ -175,13 +193,14 @@ def separate_model():
     
     print('Total Feature: %s' %((len(X.columns))))
     print(params)
-    has_eval = 1    # 是否划分验证集
+    has_eval = 0    # 是否划分验证集
     if has_eval:
         X_train, X_eval, y_train, y_eval = train_test_split(
             X, y, test_size=0.2, random_state=0)
     else:
         X_train, y_train = X, y
 
+    X_train, y_train = shuffle(X_train, y_train, random_state=0)
 
     def eval_rmse(gbm, X_eval, y_eval, original=True):
         y_pred_eval = gbm.predict(X_eval, num_iteration=gbm.best_iteration)
@@ -202,6 +221,7 @@ def separate_model():
         if has_eval:
             y_eval_model = y_eval.iloc[:, i]
             rmse[i] = eval_rmse(gbm, X_eval, y_eval_model, is_original[i])
+            print(rmse[i])
 
     print(rmse)
     score = (sum(rmse) / len(rmse))
@@ -221,4 +241,8 @@ def separate_model():
 
 if __name__ == '__main__':
     separate_model()
-    # cv_test(2)
+
+    # cv_res = []
+    # for i in range(1):
+    #     cv_res.append(cv_test(i))
+    # shuffle_test(2)  # shuffle 无影响
