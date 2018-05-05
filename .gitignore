@@ -9,3 +9,4 @@ test.ipynb
 model/
 source/.vscode/
 data/
+source/__pycache__/
