@@ -173,7 +173,7 @@ def cv_test(model):
     params = get_best_params()
     y_pred_df = pd.DataFrame()
     params['sub_feature'] = 0.4
-    kf = KFold(n_splits=5,shuffle=True)
+    kf = KFold(n_splits=5)
     scores=[]
     for train, test in kf.split(X):
         X_train, X_test, y_train, y_test = X.iloc[train], X.iloc[test], y.iloc[train], y.iloc[test]
@@ -193,10 +193,10 @@ def separate_model():
     
     print('Total Feature: %s' %((len(X.columns))))
     print(params)
-    has_eval = 0    # 是否划分验证集
+    has_eval = 1    # 是否划分验证集
     if has_eval:
         X_train, X_eval, y_train, y_eval = train_test_split(
-            X, y, test_size=0.2, random_state=0)
+            X, y, test_size=0.2, random_state=6)
     else:
         X_train, y_train = X, y
 
@@ -232,12 +232,12 @@ def separate_model():
     for i, gbm in enumerate(gbm_store):
         y_pred_test = gbm.predict(X_test, num_iteration=gbm.best_iteration)
         y_pred_df[label[i]] = y_pred_test if is_original[i] else np.expm1(y_pred_test)
-        gbm.save_model('../model/gbdt_model'+time_stamp+str(i)+'_'+str(score)+'.txt')
+        gbm.save_model('../model/gbdt_model_testb'+time_stamp+str(i)+'_'+str(score)+'.txt')
         
     y_pred_df['vid'] = test_vid
     y_pred_gbdt_df = y_pred_df.loc[:, ['vid'] + label]
     # y_pred_gbdt_df = y_pred_gbdt_df.round(3)
-    y_pred_gbdt_df.to_csv('../data/gbdt/gbdt_output_log1p_'+time_stamp+str(score)+'.csv', index=False, header=False)
+    y_pred_gbdt_df.to_csv('../data/gbdt/gbdt_output_log1p_testb'+time_stamp+str(score)+'.csv', index=False, header=False)
 
 if __name__ == '__main__':
     separate_model()
