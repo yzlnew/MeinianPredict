@@ -17,7 +17,8 @@ data_fmt_all = data_compressed.unstack(fill_value=None)
 data_fmt_all.columns = data_fmt_all.columns.droplevel(level=0)
 
 null_count = data_fmt_all.isnull().sum()
-data_keep_50000 = data_fmt_all.drop(
-    labels=null_count[null_count >= 50000].index, axis=1)
+data_keep = data_fmt_all.drop(
+    labels=null_count[null_count >= 57200].index, axis=1)
 
-data_keep_50000.to_csv("../data/data_keep_50000.csv")
+data_keep.to_pickle("../data/data_keep_57100.pkl")
+print('data cleaning done.')
