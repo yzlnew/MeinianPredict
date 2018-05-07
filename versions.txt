@@ -1,0 +1,9 @@
+OS - Windows 10
+chardet==3.0.4
+lightgbm==2.1.0
+matplotlib==2.2.2
+numpy==1.14.2
+pandas==0.22.0
+scikit-learn==0.19.1
+scikit-optimize==0.5.2
+seaborn==0.8.1
