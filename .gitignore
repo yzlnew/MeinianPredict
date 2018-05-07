@@ -10,3 +10,5 @@ model/
 source/.vscode/
 data/
 source/__pycache__/
+code/.vscode/
+code/__pycache__/
