@@ -13,8 +13,8 @@ from selection_utils import convert_mixed_num
 
 warnings.filterwarnings("ignore")
 
-merged_train_df = pd.read_pickle('../data/data_train_num.pkl')
-merged_test_df = pd.read_pickle('../data/data_test_num.pkl')
+merged_train_df = pd.read_pickle('../data/data_train_lda.pkl')
+merged_test_df = pd.read_pickle('../data/data_test_lda.pkl')
 combine = [merged_train_df, merged_test_df]
 
 numerical_feature = merged_train_df.describe().columns.values

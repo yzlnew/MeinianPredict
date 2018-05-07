@@ -6,6 +6,7 @@ import pandas as pd
 import re
 import warnings
 import lightgbm as lgb
+import chardet
 
 warnings.filterwarnings("ignore")
 
@@ -33,5 +34,11 @@ def convert_mixed_num(data):
         else:
             return np.nan
 
+def get_encoding(file):
+    with open(file, 'rb') as f:
+        return chardet.detect(f.read())['encoding']
+
 if __name__ == '__main__':
-   print(get_low_importance('../model/gbdt_model2018-05-03_1853_4_0.029917.txt'))
+    # print(get_low_importance('../model/gbdt_model2018-05-03_1853_4_0.029917.txt'))
+    # file = '../data/meinian_round1_train_20180408.csv'
+    # print(get_encoding(file))

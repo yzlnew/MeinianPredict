@@ -15,8 +15,8 @@ warnings.filterwarnings("ignore")
 
 data = pd.read_pickle('../data/data_keep_57200.pkl')
 data['vid'] = data.index
-train_df = pd.read_csv('../data/meinian_round1_train_20180408.csv')
-test_df = pd.read_csv('../data/meinian_round1_test_b_20180505.csv')
+train_df = pd.read_csv('../data/meinian_round1_train_20180408.csv', encoding='gbk')
+test_df = pd.read_csv('../data/meinian_round1_test_b_20180505.csv', encoding='gbk')
 
 # 通过 describe 查看特征的类型，标准差，修正类型和异常数据
 train_df['收缩压'] = pd.to_numeric(train_df['收缩压'], errors='coerce')

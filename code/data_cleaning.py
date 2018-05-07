@@ -3,8 +3,8 @@
 
 import pandas as pd
 
-raw_data1 = pd.read_csv('../data/meinian_round1_data_part1_20180408.txt', sep='$')
-raw_data2 = pd.read_csv('../data/meinian_round1_data_part2_20180408.txt', sep='$')
+raw_data1 = pd.read_csv('../data/meinian_round1_data_part1_20180408.txt', sep='$', encoding='utf-8')
+raw_data2 = pd.read_csv('../data/meinian_round1_data_part2_20180408.txt', sep='$', encoding='utf-8')
 raw_data = pd.concat([raw_data1, raw_data2])
 
 print(raw_data.shape)
