@@ -20,5 +20,5 @@ null_count = data_fmt_all.isnull().sum()
 data_keep = data_fmt_all.drop(
     labels=null_count[null_count >= 57200].index, axis=1)
 
-data_keep.to_pickle("../data/data_keep_57100.pkl")
+data_keep.to_pickle("../data/data_keep_57200.pkl")
 print('data cleaning done.')
