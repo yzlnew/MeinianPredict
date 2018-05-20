@@ -18,7 +18,7 @@ from sklearn.utils import shuffle
 from skopt import gp_minimize
 from skopt.space import Integer, Real
 from skopt.utils import use_named_args
-from selection_utils import get_low_importance
+from utils import get_low_importance, get_data
 
 warnings.filterwarnings("ignore")
 
@@ -40,34 +40,6 @@ def lgbm(x, y, params, no_cv, num_boost_round=750):
     if not no_cv:
         lgb.cv(params, lgb_train, stratified=False, num_boost_round=1000, verbose_eval=1)
     return gbm
-
-
-def get_data():
-    # 读取数据
-    train_df = pd.read_pickle('../data/data_train.pkl')
-    test_df = pd.read_pickle('../data/data_test.pkl')
-    # low_importance = get_low_importance('../model/gbdt_model2018-05-03_1853_4_0.029917.txt')
-    # train_df.drop(columns=low_importance, inplace=True)
-    # test_df.drop(columns=low_importance, inplace=True)
-    # 获取特征列表，并填充 NaN
-    num_feature = train_df.describe().columns.values.tolist()[5:]
-    label = train_df.describe().columns.values.tolist()[0:5]
-    # cate_feature = train_df.describe(include='category').columns.values.tolist()
-    cate_feature = {}
-    most_num = train_df[num_feature+label].mean()
-    # most_cate ={}
-    # for col in cate_feature:
-        # most_cate[col] = train_df[col].value_counts().index[0]
-
-    X = train_df.loc[:, num_feature].fillna(most_num)
-    y = train_df.loc[:, label].fillna(most_num)
-    # X, y = shuffle(X, y, random_state=0)
-    X_test = test_df.loc[:, num_feature].fillna(most_num)
-    
-    # X[cate_feature] = train_df.loc[:, cate_feature].fillna(most_cate)
-    # X_test[cate_feature] = test_df.loc[:, cate_feature].fillna(most_cate)
-    test_vid = test_df['vid']
-    return X, y, X_test, num_feature, cate_feature, label, test_vid
 
 
 def set_params_space():
@@ -193,7 +165,7 @@ def separate_model():
     
     print('Total Feature: %s' %((len(X.columns))))
     print(params)
-    has_eval = 0    # 是否划分验证集
+    has_eval = 1    # 是否划分验证集
     if has_eval:
         X_train, X_eval, y_train, y_eval = train_test_split(
             X, y, test_size=0.2, random_state=0)
