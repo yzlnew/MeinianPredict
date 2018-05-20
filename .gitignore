@@ -5,3 +5,4 @@ test.ipynb
 .vscode/launch.json
 code/.vscode/
 code/__pycache__/
+model/
